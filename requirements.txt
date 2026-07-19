@@ -1,0 +1,26 @@
+# ── Core (unchanged) ──────────────────────────────────────────────────────────
+Flask==2.3.3
+requests==2.31.0
+python-dotenv==1.0.0
+Werkzeug==2.3.7
+Pillow==10.0.0
+
+# ── Gemini SDK (replaces raw REST calls used by new modules) ──────────────────
+google-genai>=0.8.0
+
+# ── ML: confidence model + SHAP XAI ─────────────────────────────────────────
+scikit-learn>=1.4.0
+numpy>=1.26.0
+pandas>=2.0.0
+joblib>=1.3.0
+shap>=0.45.0
+
+# ── Scheduling (executive summaries) ─────────────────────────────────────────
+APScheduler>=3.10.0
+
+# ── Emergency calls (optional: only required if TWILIO_* env vars are set) ───
+twilio>=8.0.0
+
+# ── Instagram bot (optional: only required if running instagram_bot.py) ───────
+instagrapi>=2.0.0
+openai>=1.0.0          # Groq uses the OpenAI-compatible SDK

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-900">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RoadPulse AI — Traffic & Infrastructure Intelligence Hub</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brandOrange: '#ff7a22',
+                        brandCharcoal: '#1d1f23',
+                        brandGreyBg: '#f4f5f8',
+                        brandSageBg: '#e2eedd',
+                        brandSageText: '#235032',
+                        brandBorder: '#e5e7eb',
+                        brandDarkCharcoal: '#121316'
+                    },
+                    borderRadius: {
+                        '3xl': '1.5rem',
+                        '4xl': '2rem'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="h-screen w-screen flex overflow-hidden bg-[#f4f5f8] text-brandCharcoal">
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="absolute inset-0 z-[5000] flex bg-brandDarkCharcoal overflow-y-auto">
+        <div class="hidden lg:flex w-1/2 relative bg-cover bg-center overflow-hidden flex-col justify-between p-12 text-white border-r border-slate-800" style="background-image: linear-gradient(135deg, rgba(29, 31, 35, 0.95), rgba(255, 122, 34, 0.15)), url('https://placehold.co/1200x800/1d1f23/334155?text=Smart+City+GIS+Network');">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-brandOrange rounded-2xl flex items-center justify-center text-white font-extrabold text-2xl shadow-lg shadow-brandOrange/20">R</div>
+                <div>
+                    <span class="text-xs uppercase tracking-widest text-brandOrange font-bold">Hackathon Core Platform</span>
+                    <h2 class="text-lg font-extrabold tracking-tight">RoadPulse AI Hub</h2>
+                </div>
+            </div>
+            <div>
+                <p class="text-xs uppercase tracking-widest text-brandOrange font-extrabold mb-2">INTELLIGENT URBAN MOBILITY</p>
+                <h3 class="text-4xl font-black tracking-tight leading-none mb-4">Empowering Cities via Computer Vision & GIS</h3>
+                <p class="text-slate-300 text-sm max-w-md leading-relaxed">Bridging the gap between municipal departments, active transit operations, and residents. File reports powered by instant Gemini-based reasoning and automated dispatching.</p>
+            </div>
+            <div class="flex justify-between items-center text-xs text-slate-500 font-medium">
+                <span>Hackathon Edition v4.5.1</span>
+                <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-brandOrange animate-ping"></span> Nodes Sync'd</span>
+            </div>
+            <div class="absolute inset-0 scan-line pointer-events-none opacity-40"></div>
+        </div>
+
+        <div class="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12 relative bg-[#15171a]">
+            <div class="w-full max-w-md bg-brandCharcoal/80 p-8 rounded-3xl border border-slate-800 backdrop-blur-md premium-shadow relative z-10">
+                <div class="mb-6 text-center">
+                    <h1 class="text-2xl font-black text-white tracking-tight mb-1">Urban Console Login</h1>
+                    <p class="text-xs text-slate-400">Please provide your credentials to switch between workspace views</p>
+                </div>
+
+                <form onsubmit="handleUnifiedLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="text-[10px] font-extrabold uppercase text-slate-400 block mb-1.5">Username / Identifier</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs"><i class="fa-solid fa-user"></i></span>
+                            <input type="text" id="login-username" placeholder="Enter username..." class="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-800 text-white rounded-2xl text-xs font-semibold focus:outline-none focus:border-brandOrange transition-all" required>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] font-extrabold uppercase text-slate-400 block mb-1.5">Access Password</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs"><i class="fa-solid fa-lock"></i></span>
+                            <input type="password" id="login-password" placeholder="••••••••" class="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-800 text-white rounded-2xl text-xs font-semibold focus:outline-none focus:border-brandOrange transition-all" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-brandOrange hover:bg-orange-600 text-white font-extrabold py-3.5 rounded-2xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-brandOrange/20 flex items-center justify-center gap-2 mt-2">
+                        <span>Authenticate Access</span>
+                        <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                    </button>
+                </form>
+
+                <div class="mt-8 pt-6 border-t border-slate-800/80">
+                    <span class="text-[10px] font-extrabold uppercase text-slate-500 block mb-3 text-center">Quick-Fill Demo Credentials</span>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="fillAndLogin('citizen', 'user2026')" class="bg-slate-900/40 hover:bg-slate-900 border border-slate-800 text-left p-3 rounded-2xl transition-all group">
+                            <div class="text-brandOrange font-bold text-xs mb-0.5 group-hover:text-white transition-colors flex items-center gap-1.5">
+                                <i class="fa-solid fa-users"></i> Citizen Portal
+                            </div>
+                            <span class="text-[9px] text-slate-400 block">Username: citizen</span>
+                            <span class="text-[9px] text-slate-400 block">Password: user2026</span>
+                        </button>
+                        <button onclick="fillAndLogin('admin', 'pulse2026')" class="bg-slate-900/40 hover:bg-slate-900 border border-slate-800 text-left p-3 rounded-2xl transition-all group">
+                            <div class="text-amber-500 font-bold text-xs mb-0.5 group-hover:text-white transition-colors flex items-center gap-1.5">
+                                <i class="fa-solid fa-user-shield"></i> Operator Hub
+                            </div>
+                            <span class="text-[9px] text-slate-400 block">Username: admin</span>
+                            <span class="text-[9px] text-slate-400 block">Password: pulse2026</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP SHELL (main interface - hidden initially) -->
+    <div id="app-shell" class="hidden flex-1 flex h-full w-full overflow-hidden">
+        <!-- Left sidebar -->
+        <aside id="main-navigation-sidebar" class="my-4 ml-4 mr-2 bg-white rounded-4xl flex flex-col items-center justify-between py-6 premium-shadow border border-gray-100 z-10 shrink-0 sidebar-transition w-20">
+            <!-- Navigation buttons and user badge go here - populated by main.js -->
+        </aside>
+
+        <!-- Main content area with map and panels -->
+        <main class="flex-1 flex flex-col h-full overflow-hidden p-3 md:p-4 relative">
+            <!-- Header -->
+            <header class="flex flex-col md:flex-row md:items-center justify-between mb-3 shrink-0 gap-2">
+                <div>
+                    <div class="flex items-center gap-2 text-xs text-gray-400 font-medium">
+                        <span id="header-platform-label">RoadPulse AI platform</span>
+                        <span>/</span>
+                        <span id="header-workspace-label">Overview Console</span>
+                        <span>/</span>
+                        <span class="text-brandOrange font-bold" id="breadcrumb-current">Overview</span>
+                    </div>
+                    <div class="flex items-center gap-3 mt-0.5">
+                        <h1 class="text-xl md:text-2xl font-extrabold text-brandCharcoal tracking-tight">
+                            Smart-City Incident Control Console
+                        </h1>
+                        <span id="workspace-badge" class="text-[10px] font-semibold bg-brandCharcoal text-white px-2.5 py-0.5 rounded-full uppercase tracking-wider hidden sm:inline-block">2026 Engine v4.5</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 self-end md:self-auto">
+                    <div class="relative w-44 sm:w-60">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                        <input type="text" id="global-search" onkeyup="filterLiveLog()" placeholder="Search incidents, wards..." class="w-full pl-9 pr-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs text-gray-700 placeholder-gray-400 focus:outline-none focus:border-brandOrange transition-all shadow-sm">
+                    </div>
+                    <div id="toast-notif" class="hidden flex items-center gap-2 bg-[#e2eedd] border border-[#235032]/20 text-[#235032] py-1.5 px-3 rounded-full text-xs font-bold animate-pulse shadow-sm">
+                        <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+                        <span id="toast-message">Real-time GPS tracker online.</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Mobile nav bar -->
+            <div id="mobile-navigation-bar" class="flex md:hidden bg-white p-1 rounded-xl mb-3 shadow-sm border border-gray-100 shrink-0 gap-1"></div>
+
+            <!-- Map and sidebar panels -->
+            <div class="flex-1 flex flex-col lg:flex-row gap-4 overflow-hidden relative">
+                <!-- Leaflet map section -->
+                <section class="flex-1 bg-white rounded-3xl premium-shadow overflow-hidden border border-gray-100 flex flex-col relative min-h-[300px]">
+                    <div id="map" class="flex-1"></div>
+                    <!-- Incident detail drawer will be injected here -->
+                </section>
+
+                <!-- Right sidebar panel with tabs -->
+                <section id="sidebar-panel" class="w-full lg:w-[450px] bg-white rounded-3xl premium-shadow border border-gray-100 flex flex-col overflow-hidden relative sidebar-transition shrink-0">
+                    <!-- Tab content will be injected here -->
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Instagram share modal -->
+    <div id="share-card-modal" class="hidden fixed inset-0 z-[6000] flex items-center justify-center bg-black/75 p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 flex flex-col gap-4 relative">
+            <button onclick="closeShareModal()" class="absolute top-4 right-4 text-gray-400 hover:text-brandCharcoal"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <h3 class="text-sm font-extrabold text-brandCharcoal uppercase tracking-wider mb-1"><i class="fa-brands fa-instagram text-brandOrange"></i> Export Civic Share Card</h3>
+            <p class="text-[10px] text-gray-400 leading-normal">Creates a secure, watermarked graphic featuring Gemini AI analysis to post onto social channels.</p>
+            
+            <div class="border border-gray-200 rounded-2xl overflow-hidden shadow-sm flex items-center justify-center bg-gray-100">
+                <canvas id="instagram-canvas" width="400" height="400" class="max-w-full h-auto rounded-2xl border border-gray-200"></canvas>
+            </div>
+            
+            <button onclick="downloadShareCard()" class="w-full bg-brandOrange hover:bg-orange-600 text-white font-extrabold py-3 rounded-2xl text-xs uppercase tracking-wider shadow-md flex items-center justify-center gap-2">
+                <i class="fa-solid fa-download"></i> Download Export Graphic
+            </button>
+        </div>
+    </div>
+
+    <!-- External JS files with API fetch wrapper and main logic -->
+    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

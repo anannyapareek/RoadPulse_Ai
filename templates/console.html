@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-900">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RoadPulse AI — Traffic & Infrastructure Intelligence Hub</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brandOrange: '#ff7a22',
+                        brandCharcoal: '#1d1f23',
+                        brandGreyBg: '#f4f5f8',
+                        brandSageBg: '#e2eedd',
+                        brandSageText: '#235032',
+                        brandBorder: '#e5e7eb',
+                        brandDarkCharcoal: '#121316'
+                    },
+                    borderRadius: {
+                        '3xl': '1.5rem',
+                        '4xl': '2rem'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Leaflet GIS Map CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/console_style.css') }}">
+
+</head>
+<body class="h-screen w-screen flex overflow-hidden bg-[#f4f5f8] text-brandCharcoal">
+
+    <!-- UNIFIED SIGN-IN GATEWAY -->
+    <div id="login-screen" class="absolute inset-0 z-[5000] flex bg-brandDarkCharcoal overflow-y-auto">
+        <!-- Visual Promo Split Side -->
+        <div class="hidden lg:flex w-1/2 relative bg-cover bg-center overflow-hidden flex-col justify-between p-12 text-white border-r border-slate-800" style="background-image: linear-gradient(135deg, rgba(29, 31, 35, 0.95), rgba(255, 122, 34, 0.15)), url('https://placehold.co/1200x800/1d1f23/334155?text=Smart+City+GIS+Network');">
+            <!-- Header Brand -->
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-brandOrange rounded-2xl flex items-center justify-center text-white font-extrabold text-2xl shadow-lg shadow-brandOrange/20">
+                    R
+                </div>
+                <div>
+                    <span class="text-xs uppercase tracking-widest text-brandOrange font-bold">Hackathon Core Platform</span>
+                    <h2 class="text-lg font-extrabold tracking-tight">RoadPulse AI Hub</h2>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div>
+                <p class="text-xs uppercase tracking-widest text-brandOrange font-extrabold mb-2">INTELLIGENT URBAN MOBILITY</p>
+                <h3 class="text-4xl font-black tracking-tight leading-none mb-4">Empowering Cities via Computer Vision & GIS</h3>
+                <p class="text-slate-300 text-sm max-w-md leading-relaxed">
+                    Bridging the gap between municipal departments, active transit operations, and residents. File reports powered by instant Gemini-based reasoning and automated dispatching.
+                </p>
+            </div>
+
+            <!-- Footer Meta -->
+            <div class="flex justify-between items-center text-xs text-slate-500 font-medium">
+                <span>Hackathon Edition v4.5.1</span>
+                <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-brandOrange animate-ping"></span> Nodes Sync'd</span>
+            </div>
+            
+            <div class="absolute inset-0 scan-line pointer-events-none opacity-40"></div>
+        </div>
+
+        <!-- Unified Login Form Container -->
+        <div class="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12 relative bg-[#15171a]">
+            <div class="w-full max-w-md bg-brandCharcoal/80 p-8 rounded-3xl border border-slate-800 backdrop-blur-md premium-shadow relative z-10">
+                <div class="mb-6 text-center">
+                    <h1 class="text-2xl font-black text-white tracking-tight mb-1">Urban Console Login</h1>
+                    <p class="text-xs text-slate-400">Please provide your credentials to switch between workspace views</p>
+                </div>
+
+                <!-- Sign-In Form Elements -->
+                <form onsubmit="handleUnifiedLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="text-[10px] font-extrabold uppercase text-slate-400 block mb-1.5">Username / Identifier</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs"><i class="fa-solid fa-user"></i></span>
+                            <input type="text" id="login-username" placeholder="Enter username..." class="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-800 text-white rounded-2xl text-xs font-semibold focus:outline-none focus:border-brandOrange transition-all" required>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] font-extrabold uppercase text-slate-400 block mb-1.5">Access Password</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs"><i class="fa-solid fa-lock"></i></span>
+                            <input type="password" id="login-password" placeholder="••••••••" class="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-800 text-white rounded-2xl text-xs font-semibold focus:outline-none focus:border-brandOrange transition-all" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-brandOrange hover:bg-orange-600 text-white font-extrabold py-3.5 rounded-2xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-brandOrange/20 flex items-center justify-center gap-2 mt-2">
+                        <span>Authenticate Access</span>
+                        <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                    </button>
+                </form>
+
+                <!-- Demo Access Presets helper widgets -->
+                <div class="mt-8 pt-6 border-t border-slate-800/80">
+                    <span class="text-[10px] font-extrabold uppercase text-slate-500 block mb-3 text-center">Quick-Fill Demo Credentials</span>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="fillAndLogin('citizen', 'user2026')" class="bg-slate-900/40 hover:bg-slate-900 border border-slate-800 text-left p-3 rounded-2xl transition-all group">
+                            <div class="text-brandOrange font-bold text-xs mb-0.5 group-hover:text-white transition-colors flex items-center gap-1.5">
+                                <i class="fa-solid fa-users"></i> Citizen Portal
+                            </div>
+                            <span class="text-[9px] text-slate-400 block">Username: citizen</span>
+                            <span class="text-[9px] text-slate-400 block">Password: user2026</span>
+                        </button>
+                        <button onclick="fillAndLogin('admin', 'pulse2026')" class="bg-slate-900/40 hover:bg-slate-900 border border-slate-800 text-left p-3 rounded-2xl transition-all group">
+                            <div class="text-amber-500 font-bold text-xs mb-0.5 group-hover:text-white transition-colors flex items-center gap-1.5">
+                                <i class="fa-solid fa-user-shield"></i> Operator Hub
+                            </div>
+                            <span class="text-[9px] text-slate-400 block">Username: admin</span>
+                            <span class="text-[9px] text-slate-400 block">Password: pulse2026</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP SHELL CONTAINER -->
+    <div id="app-shell" class="hidden flex-1 flex h-full w-full overflow-hidden">
+
+        <!-- COLLAPSIBLE LEFT NAVIGATION SIDEBAR -->
+        <aside id="main-navigation-sidebar" class="my-4 ml-4 mr-2 bg-white rounded-4xl flex flex-col items-center justify-between py-6 premium-shadow border border-gray-100 z-10 shrink-0 sidebar-transition w-20">
+            <div class="flex flex-col items-center gap-8 w-full">
+                <!-- App Logo & Sidebar Toggle Handle -->
+                <div class="relative flex flex-col items-center">
+                    <div class="w-12 h-12 bg-brandCharcoal rounded-2xl flex items-center justify-center text-white font-extrabold text-2xl relative transition-transform hover:scale-105 cursor-pointer">
+                        R
+                        <span class="absolute right-0 bottom-0 w-3 h-3 bg-brandOrange rounded-full border-2 border-white"></span>
+                    </div>
+                    <!-- Sidebar collapse trigger toggle -->
+                    <button onclick="toggleNavigationSidebar()" class="absolute -right-3 -bottom-3 bg-white hover:bg-gray-100 text-brandCharcoal hover:text-brandOrange w-6 h-6 rounded-full border border-gray-200 shadow flex items-center justify-center transition-all" title="Toggle Sidebar Expand">
+                        <i id="nav-collapse-icon" class="fa-solid fa-angles-left text-[10px]"></i>
+                    </button>
+                </div>
+                
+                <!-- ADMINISTRATIVE / OPERATOR TAB ACTIONS -->
+                <nav id="nav-operator-group" class="flex flex-col gap-4 w-full px-3">
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full h-12 flex items-center gap-3 justify-center text-gray-400 hover:text-brandCharcoal hover:bg-gray-100 rounded-2xl transition-all duration-300" title="Operations Overview">
+                        <i class="fa-solid fa-house text-lg"></i>
+                        <span class="hidden sidebar-label text-xs font-bold whitespace-nowrap text-left flex-1">Overview Dashboard</span>
+                    </button>
+                    <button onclick="switchTab('reports')" id="nav-reports" class="w-full h-12 flex items-center gap-3 justify-center text-gray-400 hover:text-brandCharcoal hover:bg-gray-100 rounded-2xl transition-all duration-300" title="Deploy Manual Dispatch">
+                        <i class="fa-solid fa-file-circle-plus text-lg"></i>
+                        <span class="hidden sidebar-label text-xs font-bold whitespace-nowrap text-left flex-1">Manual Dispatches</span>
+                    </button>
+                    <button onclick="switchTab('routing')" id="nav-routing" class="w-full h-12 flex items-center gap-3 justify-center text-gray-400 hover:text-brandCharcoal hover:bg-gray-100 rounded-2xl transition-all duration-300" title="Dynamic Safe Routing">
+                        <i class="fa-solid fa-route text-lg"></i>
+                        <span class="hidden sidebar-label text-xs font-bold whitespace-nowrap text-left flex-1">Avoidance Router</span>
+                    </button>
+                    <button onclick="switchTab('analytics')" id="nav-analytics" class="w-full h-12 flex items-center gap-3 justify-center text-gray-400 hover:text-brandCharcoal hover:bg-gray-100 rounded-2xl transition-all duration-300" title="Public Metrics & SLA">
+                        <i class="fa-solid fa-chart-line text-lg"></i>
+                        <span class="hidden sidebar-label text-xs font-bold whitespace-nowrap text-left flex-1">Telemetry Metrics</span>
+                    </button>
+                </nav>
+
+                <!-- CITIZEN PORTAL TAB ACTIONS -->
+                <nav id="nav-citizen-group" class="hidden flex flex-col gap-4 w-full px-3">
+                    <button onclick="switchTab('citizen-report')" id="nav-citizen-report" class="w-full h-12 flex items-center gap-3 justify-center text-gray-400 hover:text-brandCharcoal hover:bg-gray-100 rounded-2xl transition-all duration-300 active-nav-item" title="Report Community Issue">
+                        <i class="fa-solid fa-circle-plus text-lg"></i>
+                        <span class="hidden sidebar-label text-xs font-bold whitespace-nowrap text-left flex-1">File Report</span>
+                    </button>
+                    <button onclick="switchTab('citizen-my-reports')" id="nav-citizen-my-reports" class="w-full h-12 flex items-center gap-3 justify-center text-gray-400 hover:text-brandCharcoal hover:bg-gray-100 rounded-2xl transition-all duration-300" title="Track My Submissions">
+                        <i class="fa-solid fa-clock-rotate-left text-lg"></i>
+                        <span class="hidden sidebar-label text-xs font-bold whitespace-nowrap text-left flex-1">My Filed Reports</span>
+                    </button>
+                    <button onclick="switchTab('citizen-safe-routing')" id="nav-citizen-safe-routing" class="w-full h-12 flex items-center gap-3 justify-center text-gray-400 hover:text-brandCharcoal hover:bg-gray-100 rounded-2xl transition-all duration-300" title="Commute Safe Paths">
+                        <i class="fa-solid fa-shield-halved text-lg"></i>
+                        <span class="hidden sidebar-label text-xs font-bold whitespace-nowrap text-left flex-1">Commuter Safety</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Exit and User Status footer with Trust Score Indicator -->
+            <div class="flex flex-col items-center gap-4 w-full px-3">
+                <!-- User reputation Trust Badge -->
+                <div class="flex flex-col items-center justify-center bg-brandGreyBg px-2 py-1.5 rounded-xl border border-gray-100 shadow-sm text-center" title="Citizen/Operator Trust score metric">
+                    <span class="text-[7px] text-gray-400 font-bold uppercase tracking-wider block">Trust Score</span>
+                    <span id="user-trust-badge" class="text-xs font-black text-brandOrange font-mono">50</span>
+                </div>
+                
+                <button onclick="logOut()" class="w-10 h-10 bg-rose-50 border border-rose-100 hover:bg-rose-100 rounded-full flex items-center justify-center text-rose-500 transition-all" title="Exit Workspace / Lock Session">
+                    <i class="fa-solid fa-arrow-right-from-bracket text-sm"></i>
+                </button>
+                <div class="w-10 h-10 rounded-full border-2 border-brandOrange overflow-hidden shadow-inner cursor-pointer" title="Active Account Identity">
+                    <img id="avatar-user" src="https://placehold.co/100x100/1d1f23/ffffff?text=AD" alt="User Avatar" class="w-full h-full object-cover">
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN INTERACTIVE SPACE -->
+        <main class="flex-1 flex flex-col h-full overflow-hidden p-3 md:p-4 relative">
+            
+            <!-- TOP BREADCRUMB HEADER AREA -->
+            <header class="flex flex-col md:flex-row md:items-center justify-between mb-3 shrink-0 gap-2">
+                <div>
+                    <div class="flex items-center gap-2 text-xs text-gray-400 font-medium">
+                        <span id="header-platform-label">RoadPulse AI platform</span>
+                        <span>/</span>
+                        <span id="header-workspace-label">Overview Console</span>
+                        <span>/</span>
+                        <span class="text-brandOrange font-bold" id="breadcrumb-current">Overview</span>
+                    </div>
+                    <div class="flex items-center gap-3 mt-0.5">
+                        <h1 class="text-xl md:text-2xl font-extrabold text-brandCharcoal tracking-tight">
+                            Smart-City Incident Control Console
+                        </h1>
+                        <span id="workspace-badge" class="text-[10px] font-semibold bg-brandCharcoal text-white px-2.5 py-0.5 rounded-full uppercase tracking-wider hidden sm:inline-block">2026 Engine v4.5</span>
+                    </div>
+                </div>
+
+                <!-- Global Filter Controls -->
+                <div class="flex items-center gap-3 self-end md:self-auto">
+                    <div class="relative w-44 sm:w-60">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                        <input type="text" id="global-search" onkeyup="filterLiveLog()" placeholder="Search incidents, wards..." class="w-full pl-9 pr-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs text-gray-700 placeholder-gray-400 focus:outline-none focus:border-brandOrange transition-all shadow-sm">
+                    </div>
+                    <!-- Status message dynamic badge -->
+                    <div id="toast-notif" class="hidden flex items-center gap-2 bg-[#e2eedd] border border-[#235032]/20 text-[#235032] py-1.5 px-3 rounded-full text-xs font-bold animate-pulse shadow-sm">
+                        <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+                        <span id="toast-message">Real-time GPS tracker online.</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- MOBILE NAVIGATION BAR (Only visible on micro screens) -->
+            <div id="mobile-navigation-bar" class="flex md:hidden bg-white p-1 rounded-xl mb-3 shadow-sm border border-gray-100 shrink-0 gap-1">
+                <!-- Populated dynamically based on role -->
+            </div>
+
+            <!-- VIEWPORT SPACE FOR MAP & SIDEBAR PANELS -->
+            <div class="flex-1 flex flex-col lg:flex-row gap-4 overflow-hidden relative">
+
+                <!-- GEOGRAPHIC LEAFLET MAP VIEWPORT -->
+                <section class="flex-1 bg-white rounded-3xl premium-shadow overflow-hidden border border-gray-100 flex flex-col relative min-h-[300px]">
+                    <!-- Floating Map Layer Selection Controller -->
+                    <div class="absolute top-4 left-4 z-[1000] flex items-center gap-1.5 bg-white/95 backdrop-blur-md p-1.5 rounded-2xl shadow-lg border border-gray-100">
+                        <button onclick="toggleMapLayer('markers')" id="layer-btn-markers" class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all bg-brandOrange text-white shadow-sm flex items-center gap-1.5">
+                            <i class="fa-solid fa-location-dot"></i> <span>Pins View</span>
+                        </button>
+                        <button onclick="toggleMapLayer('heat')" id="layer-btn-heat" class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all text-gray-600 hover:bg-gray-100 flex items-center gap-1.5">
+                            <i class="fa-solid fa-fire"></i> <span>Heatmap</span>
+                        </button>
+                    </div>
+
+                    <!-- Map Severity Color Legends -->
+                    <div class="absolute bottom-4 right-4 z-[1000] bg-white/95 backdrop-blur-md p-2.5 rounded-xl shadow-md border border-gray-100 text-[10px] font-bold flex flex-col gap-1 hidden sm:flex">
+                        <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Critical Severity</div>
+                        <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-orange-400"></span> High Severity</div>
+                        <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Medium Severity</div>
+                    </div>
+
+                    <!-- Main Leaflet Map Canvas Node -->
+                    <div class="flex-1" id="map"></div>
+
+                    <!-- MAP INTERACTIVE DRAWER (Expands incident parameters & exposes Explainable AI math) -->
+                    <div id="incident-detail-drawer" class="hidden absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-lg rounded-3xl p-4 sm:p-5 border border-gray-200/80 shadow-2xl z-[1000] max-h-[85%] sm:max-h-80 overflow-y-auto transition-all duration-300">
+                        <div class="flex justify-between items-start mb-3 border-b border-gray-100 pb-3">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span id="drawer-type" class="text-sm font-extrabold text-brandCharcoal uppercase tracking-wider">Pothole</span>
+                                    <span id="drawer-severity" class="text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase">Critical</span>
+                                </div>
+                                <p id="drawer-location" class="text-[11px] text-gray-500 mt-0.5"><i class="fa-solid fa-location-crosshairs mr-1 text-brandOrange"></i> Ward 12, Main Street Boulevard</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] text-gray-400 bg-gray-50 border border-gray-100 px-2.5 py-1 rounded-full font-mono font-bold" id="drawer-id">INC-101</span>
+                                <button onclick="closeDetailDrawer()" class="text-gray-400 hover:text-brandCharcoal text-sm font-bold bg-gray-100 hover:bg-gray-200 h-8 w-8 rounded-full flex items-center justify-center transition-all">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Detailed intelligence metrics grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <!-- Image display container with scanner animation overlay & Action Trigger overlays -->
+                            <div class="h-32 bg-gray-100 rounded-2xl overflow-hidden relative border border-gray-200 flex flex-col justify-end">
+                                <img id="drawer-image" src="" class="w-full h-full object-cover absolute inset-0 z-0" alt="Anomaly Preview">
+                                <div class="absolute inset-0 scan-line pointer-events-none z-10"></div>
+                                
+                                <!-- Watermarked Instagram Generator Option overlay -->
+                                <div class="absolute inset-0 z-10 bg-gradient-to-t from-brandCharcoal/80 via-transparent to-transparent opacity-0 hover:opacity-100 transition-all flex items-end justify-center pb-2">
+                                    <button onclick="generateInstagramCard()" class="bg-brandOrange hover:bg-orange-600 text-white font-extrabold px-3 py-1.5 rounded-xl text-[9px] uppercase tracking-wide transition-all shadow-md flex items-center gap-1.5">
+                                        <i class="fa-brands fa-instagram"></i> <span>Share Evidence</span>
+                                    </button>
+                                </div>
+
+                                <div class="relative z-10 m-1.5 bg-brandCharcoal/80 backdrop-blur-sm px-2 py-0.5 rounded text-[8px] font-mono font-bold text-emerald-400 flex items-center gap-1 w-fit">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> AI VERIFIED
+                                </div>
+                            </div>
+
+                            <!-- Gemini explanation details & Live tel: triggers -->
+                            <div class="col-span-1 flex flex-col justify-between">
+                                <div>
+                                    <h5 class="text-[10px] uppercase tracking-wider text-gray-400 font-extrabold mb-1">Gemini Vision Intelligence</h5>
+                                    <p id="drawer-ai-reasoning" class="text-xs text-gray-600 leading-relaxed font-semibold">Asphalt structural integrity failure detected. Recommended routing adjustment issued to Municipal Road Dept.</p>
+                                </div>
+                                <div class="mt-2 flex flex-col gap-1.5">
+                                    <div class="bg-brandSageBg border border-brandSageText/15 text-brandSageText text-[10px] font-extrabold px-2.5 py-1.5 rounded-xl flex items-center justify-between">
+                                        <span class="flex items-center gap-1.5">
+                                            <i class="fa-solid fa-building-shield"></i>
+                                            <span id="drawer-routing-target">Municipal Road Dept</span>
+                                        </span>
+                                    </div>
+                                    <!-- Embedded direct dialing hook (Saves critical hackathon demo execution paths) -->
+                                    <a id="drawer-phone-action" href="tel:+15550199" class="bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-extrabold px-2.5 py-1.5 rounded-xl flex items-center justify-center gap-1.5 hover:bg-rose-100 transition-all">
+                                        <i class="fa-solid fa-phone"></i> Dial Emergency Escalation Desk
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Transparent Confidence Score Formula plotting (Explainable AI - XAI) -->
+                            <div class="col-span-1 bg-slate-50 p-3 rounded-2xl border border-gray-150">
+                                <h5 class="text-[10px] uppercase tracking-wider text-slate-500 font-extrabold mb-1 flex items-center justify-between">
+                                    <span>Confidence Matrix (XAI)</span>
+                                    <span class="text-brandOrange font-mono text-[9px]" id="drawer-confidence-total">e = 0.85</span>
+                                </h5>
+                                <p class="text-[8px] text-gray-400 font-semibold mb-2 leading-tight">Formula: 50% ML + 25% Votes + 15% GPS + 10% Trust</p>
+                                <div class="flex flex-col gap-1.5 text-[9px] font-semibold text-gray-500">
+                                    <div class="flex justify-between items-center">
+                                        <span>Gemini Core ML (50%)</span>
+                                        <span id="formula-ml-label" class="font-mono text-[8px]">0.41</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span>Consensus Votes (25%)</span>
+                                        <span id="formula-votes-label" class="font-mono text-[8px]">0.16</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span>GPS Quality (15%)</span>
+                                        <span id="formula-gps-label" class="font-mono text-[8px]">0.15</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span>User Trust Rate (10%)</span>
+                                        <span id="formula-trust-label" class="font-mono text-[8px]">0.05</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Community Consensus parameters -->
+                            <div class="col-span-1 bg-gray-50 rounded-2xl p-3 border border-gray-150 flex flex-col justify-between">
+                                <div>
+                                    <h5 class="text-[10px] uppercase tracking-wider text-gray-400 font-extrabold mb-1">Community Consensus</h5>
+                                    <div class="flex items-center gap-1.5 mt-1">
+                                        <span id="drawer-confirmations" class="text-xl font-extrabold text-brandCharcoal">2</span>
+                                        <span class="text-[10px] text-gray-400 font-bold">Consensus votes</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 h-1.5 rounded-full mt-2 overflow-hidden">
+                                        <div id="drawer-consensus-bar" class="bg-brandOrange h-full transition-all duration-500" style="width: 66%"></div>
+                                    </div>
+                                </div>
+                                <div class="flex gap-2 mt-2">
+                                    <button onclick="voteOnDrawerIncident('confirm')" class="flex-1 bg-brandCharcoal hover:bg-black text-white text-[10px] py-2 font-bold rounded-lg uppercase tracking-wider transition-all">Agree</button>
+                                    <button onclick="voteOnDrawerIncident('reject')" class="flex-1 bg-white hover:bg-gray-100 text-brandCharcoal border border-gray-200 text-[10px] py-2 font-bold rounded-lg uppercase tracking-wider transition-all">Reject</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- COLLAPSIBLE RIGHT INTERACTIVE CONSOLE SIDEBAR PANEL (WHITE CAP) -->
+                <section id="sidebar-panel" class="w-full lg:w-[450px] bg-white rounded-3xl premium-shadow border border-gray-100 flex flex-col overflow-hidden relative sidebar-transition shrink-0">
+                    
+                    <!-- Sidebar collapse switch trigger button (Large displays only) -->
+                    <button onclick="toggleSidebarPanel()" class="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-12 bg-white hover:bg-gray-50 text-gray-400 hover:text-brandCharcoal rounded-full border border-gray-200 shadow-md flex items-center justify-center z-[1001] focus:outline-none transition-all hidden lg:flex">
+                        <i id="sidebar-toggle-icon" class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
+
+                    <!-- OPERATOR HUB INTERFACES -->
+                    <div id="operator-views-container" class="flex-1 flex flex-col overflow-hidden">
+                        
+                        <!-- TAB: Operations Dashboard -->
+                        <div id="tab-dashboard" class="flex-1 flex flex-col overflow-y-auto p-5 sm:p-6 gap-6">
+                            <!-- High-level live status widgets -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-brandSageBg rounded-3xl p-4 sm:p-5 border border-brandSageText/10 flex flex-col justify-between h-36">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[10px] font-extrabold text-brandSageText uppercase tracking-wider">Network Trust</span>
+                                        <span class="bg-white/90 text-brandSageText text-[8px] px-2 py-0.5 rounded-full font-bold uppercase">Optimal</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-2xl sm:text-3xl font-extrabold text-brandSageText" id="widget-trust">84.2%</span>
+                                        <p class="text-[10px] text-brandSageText/70 font-bold mt-1">Consistency with Gemini ML classifications</p>
+                                    </div>
+                                </div>
+
+                                <div class="bg-brandOrange text-white rounded-3xl p-4 sm:p-5 flex flex-col justify-between h-36 premium-shadow relative overflow-hidden">
+                                    <span class="absolute -right-6 -bottom-6 text-white/5 text-8xl font-black select-none pointer-events-none">AI</span>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[10px] font-extrabold uppercase tracking-wider">Dispatch Calls</span>
+                                        <span class="bg-white/25 text-white text-[8px] px-2 py-0.5 rounded-full font-bold uppercase">VoIP Live</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-2xl sm:text-3xl font-extrabold" id="widget-dispatches">12</span>
+                                        <p class="text-[10px] text-white/80 font-bold mt-1">Automated phone call dispatches resolved</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Active GIS incidents checklist -->
+                            <div>
+                                <div class="flex items-center justify-between mb-3 border-b border-gray-100 pb-2">
+                                    <h3 class="text-sm font-extrabold text-brandCharcoal tracking-tight">Active GIS Incidents</h3>
+                                    <span class="text-[10px] bg-brandGreyBg px-2 py-0.5 rounded-full text-gray-500 font-extrabold uppercase" id="log-count">4 items</span>
+                                </div>
+                                <div class="flex flex-col gap-2.5 max-h-[350px] overflow-y-auto pr-1" id="log-feed-container">
+                                    <!-- Populated dynamically -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB: Manual Dispatch Intake -->
+                        <div id="tab-reports" class="hidden flex-1 flex flex-col overflow-y-auto p-5 sm:p-6 gap-6">
+                            <div class="bg-gray-50 rounded-3xl p-4 border border-gray-150">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span class="w-2.5 h-2.5 bg-brandOrange rounded-full animate-ping"></span>
+                                    <h3 class="text-sm font-extrabold text-brandCharcoal">Dispatch Incident Report</h3>
+                                </div>
+
+                                <!-- Standard preset templates -->
+                                <div class="mb-4">
+                                    <span class="text-[10px] text-gray-400 font-extrabold uppercase block mb-1.5">Simulation Presets</span>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <button onclick="injectPreset('pothole')" class="bg-white hover:bg-gray-100 border border-gray-200 text-left p-2 rounded-xl transition-all flex items-center gap-2">
+                                            <div class="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center text-rose-500 text-xs shrink-0"><i class="fa-solid fa-circle-radiation"></i></div>
+                                            <div>
+                                                <p class="text-[9px] font-extrabold text-brandCharcoal uppercase">Pothole</p>
+                                                <p class="text-[8px] text-gray-400 font-medium">Main St Blvd</p>
+                                            </div>
+                                        </button>
+                                        <button onclick="injectPreset('flooding')" class="bg-white hover:bg-gray-100 border border-gray-200 text-left p-2 rounded-xl transition-all flex items-center gap-2">
+                                            <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500 text-xs shrink-0"><i class="fa-solid fa-droplet"></i></div>
+                                            <div>
+                                                <p class="text-[9px] font-extrabold text-brandCharcoal uppercase">Flood</p>
+                                                <p class="text-[8px] text-gray-400 font-medium">Drainage Block</p>
+                                            </div>
+                                        </button>
+                                        <button onclick="injectPreset('broken_signal')" class="bg-white hover:bg-gray-100 border border-gray-200 text-left p-2 rounded-xl transition-all flex items-center gap-2">
+                                            <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-500 text-xs shrink-0"><i class="fa-solid fa-traffic-light"></i></div>
+                                            <div>
+                                                <p class="text-[9px] font-extrabold text-brandCharcoal uppercase">Broken Signal</p>
+                                                <p class="text-[8px] text-gray-400 font-medium">Intersection 14</p>
+                                            </div>
+                                        </button>
+                                        <button onclick="injectPreset('accident')" class="bg-white hover:bg-gray-100 border border-gray-200 text-left p-2 rounded-xl transition-all flex items-center gap-2">
+                                            <div class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-500 text-xs shrink-0"><i class="fa-solid fa-car-burst"></i></div>
+                                            <div>
+                                                <p class="text-[9px] font-extrabold text-brandCharcoal uppercase">Collision</p>
+                                                <p class="text-[8px] text-gray-400 font-medium">Highway Route 5</p>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Manual reporting elements -->
+                                <form id="incident-form" onsubmit="submitForm(event)" class="flex flex-col gap-3">
+                                    <div>
+                                        <label class="text-[10px] font-extrabold uppercase text-gray-400 block mb-1">Visual Evidence Image</label>
+                                        <div class="bg-white border border-gray-200 rounded-2xl p-3 flex items-center gap-3 relative cursor-pointer hover:border-brandOrange transition-all">
+                                            <div class="w-10 h-10 bg-orange-50 text-brandOrange rounded-xl flex items-center justify-center text-sm">
+                                                <i class="fa-solid fa-camera animate-pulse"></i>
+                                            </div>
+                                            <div>
+                                                <p id="file-label-name" class="text-xs font-bold text-brandCharcoal">Select or drag file...</p>
+                                                <p class="text-[9px] text-gray-400">Accepts camera snaps with geotag metadata</p>
+                                            </div>
+                                            <input type="file" id="photo-input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" onchange="handleFileSelect(event)">
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="text-[10px] font-extrabold uppercase text-gray-400 block mb-1">Coordinate Vectors (Click Map to Autofill)</label>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <div class="relative">
+                                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] text-gray-400 font-extrabold">LAT</span>
+                                                <input type="number" step="any" id="form-lat" placeholder="28.6139" class="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-3 py-2 text-xs font-semibold focus:outline-none focus:border-brandOrange" required>
+                                            </div>
+                                            <div class="relative">
+                                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] text-gray-400 font-extrabold">LON</span>
+                                                <input type="number" step="any" id="form-lon" placeholder="77.2090" class="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-3 py-2 text-xs font-semibold focus:outline-none focus:border-brandOrange" required>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="text-[10px] font-extrabold uppercase text-gray-400 block mb-1">Field Observations</label>
+                                        <textarea id="form-note" placeholder="Note any specific visual details to guide Gemini Computer Vision analysis..." class="w-full bg-white border border-gray-200 rounded-2xl p-3 text-xs font-medium focus:outline-none focus:border-brandOrange h-16 resize-none"></textarea>
+                                    </div>
+
+                                    <button type="submit" id="btn-submit" class="w-full bg-brandOrange hover:bg-orange-600 text-white font-extrabold py-3 rounded-2xl text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-microchip"></i>
+                                        <span id="btn-submit-text">Run AI Processing Pipeline</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- TAB: Cost-Based Hazard Avoidance Routing -->
+                        <div id="tab-routing" class="hidden flex-1 flex flex-col p-5 sm:p-6 gap-6 overflow-y-auto">
+                            <div class="bg-gray-50 rounded-3xl p-5 border border-gray-150">
+                                <h3 class="text-sm font-extrabold text-brandCharcoal mb-1 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-route text-brandOrange"></i> Hazard Avoidance Router
+                                </h3>
+                                <p class="text-[11px] text-gray-400 leading-normal mb-4">Calculates coordinates dynamically by routing around critical identified hazard hotspots (Simulates custom OSRM Edge re-weighting).</p>
+
+                                <div class="flex flex-col gap-3">
+                                    <div>
+                                        <label class="text-[10px] font-extrabold uppercase text-gray-400 block mb-1">Departure Origin (Start Vector)</label>
+                                        <div class="relative">
+                                            <i class="fa-solid fa-location-dot absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]"></i>
+                                            <input type="text" id="route-start" placeholder="e.g. Connaught Place" class="bg-white border border-gray-200 rounded-xl pl-8 pr-3 py-2 text-xs font-semibold w-full focus:outline-none focus:border-brandOrange">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] font-extrabold uppercase text-gray-400 block mb-1">Destination Target (End Vector)</label>
+                                        <div class="relative">
+                                            <i class="fa-solid fa-flag-checkered absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]"></i>
+                                            <input type="text" id="route-end" placeholder="e.g. India Gate" class="bg-white border border-gray-200 rounded-xl pl-8 pr-3 py-2 text-xs font-semibold w-full focus:outline-none focus:border-brandOrange">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex gap-2">
+                                        <button onclick="calculateSafeRoutes()" id="btn-calculate-route" class="flex-1 bg-brandCharcoal hover:bg-black text-white font-extrabold py-3 rounded-2xl text-xs uppercase tracking-wider transition-all shadow-md flex justify-center items-center gap-1.5">
+                                            <i class="fa-solid fa-shield-halved text-brandOrange"></i> <span>Calculate Smart Route</span>
+                                        </button>
+                                        <button onclick="clearRoutes()" class="px-4 bg-gray-100 hover:bg-gray-200 text-gray-500 rounded-2xl transition-all" title="Clear plotted routes">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Route metrics parameters -->
+                            <div id="routing-comparison-results" class="hidden flex flex-col gap-3">
+                                <h4 class="text-[10px] font-extrabold text-gray-400 tracking-wider uppercase">Evaluated Route Decisions</h4>
+                                
+                                <div id="dynamic-route-result" class="bg-white border-2 border-brandOrange rounded-2xl p-4 flex items-center justify-between premium-shadow relative overflow-hidden">
+                                    <div id="route-status-badge" class="absolute -top-1 -right-1 bg-brandOrange text-white text-[8px] font-extrabold uppercase px-2 py-0.5 rounded-bl-lg">Optimal</div>
+                                    <div>
+                                        <span id="route-result-title" class="text-xs font-extrabold text-brandCharcoal block font-bold">Smart Route</span>
+                                        <span id="route-result-subtitle" class="text-[10px] text-gray-400 font-semibold block mt-1">Calculating via AI...</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <span id="route-result-risk" class="text-xs font-extrabold text-emerald-600 block">Risk: 0</span>
+                                        <span id="route-result-metrics" class="text-[10px] text-gray-400 font-bold block mt-0.5">-- KM | -- mins</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB: Telemetry KPI Analytics -->
+                        <div id="tab-analytics" class="hidden flex-1 flex flex-col p-5 sm:p-6 gap-6 overflow-y-auto">
+                            <!-- KPI Banner -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-white rounded-3xl p-5 border border-gray-200 premium-shadow">
+                                    <h4 class="text-[10px] font-extrabold text-gray-400 tracking-wider uppercase mb-1">Avg Resolution Time</h4>
+                                    <div class="flex items-end gap-2">
+                                        <span id="kpi-resolution-time" class="text-3xl font-black text-brandCharcoal">--</span>
+                                        <span class="text-xs font-bold text-gray-500 mb-1">Hours</span>
+                                    </div>
+                                    <div class="mt-2 text-[10px] font-bold">
+                                        <span id="kpi-response-perf" class="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">--% <i class="fa-solid fa-arrow-trend-up"></i></span>
+                                        <span class="text-gray-400 ml-1">Resolved under 48h</span>
+                                    </div>
+                                </div>
+                                <div class="bg-white rounded-3xl p-5 border border-gray-200 premium-shadow">
+                                    <h4 class="text-[10px] font-extrabold text-gray-400 tracking-wider uppercase mb-1">Critical Backlog</h4>
+                                    <div class="flex items-end gap-2">
+                                        <span id="kpi-pending-60" class="text-3xl font-black text-rose-600">--</span>
+                                        <span class="text-xs font-bold text-gray-500 mb-1">Issues</span>
+                                    </div>
+                                    <div class="mt-2 text-[10px] font-bold text-gray-400">
+                                        Pending > 60 days
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-gray-50 rounded-3xl p-5 border border-gray-150">
+                                <h3 class="text-sm font-extrabold text-brandCharcoal mb-3">Ward defect Density Metrics</h3>
+                                <div id="ward-metrics-container" class="flex flex-col gap-2.5">
+                                    <div class="text-center py-4 text-xs text-gray-400 font-bold">
+                                        <i class="fa-solid fa-spinner fa-spin mr-1"></i> Loading ward analytics...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="overdue-alert-container" class="hidden bg-red-50 rounded-3xl p-5 border border-red-100 flex items-start gap-4">
+                                <div class="w-12 h-12 bg-white text-rose-500 rounded-2xl flex items-center justify-center text-lg shrink-0 shadow-sm border border-red-100">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                </div>
+                                <div>
+                                    <span id="overdue-alert-title" class="text-xs font-extrabold text-red-950 block">Overdue Statutory Targets</span>
+                                    <p id="overdue-alert-desc" class="text-[10px] text-red-700 font-bold mt-1 leading-relaxed">Action deadline exceeded. Immediate attention required.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- CITIZEN HUB INTERFACES -->
+                    <div id="citizen-views-container" class="hidden flex-1 flex flex-col overflow-hidden">
+                        
+                        <!-- TAB: Citizen File Report Form -->
+                        <div id="tab-citizen-report" class="flex-1 flex flex-col overflow-y-auto p-5 sm:p-6 gap-6">
+                            <div class="bg-orange-50/50 rounded-3xl p-5 border border-brandOrange/15">
+                                <h3 class="text-sm font-extrabold text-brandCharcoal flex items-center gap-2 mb-1.5">
+                                    <i class="fa-solid fa-circle-info text-brandOrange animate-bounce"></i>
+                                    <span>Welcome to Citizen Workspace</span>
+                                </h3>
+                                <p class="text-xs text-slate-600 leading-relaxed">
+                                    Your reports are immediately processed using Gemini Vision technology to detect roadway defects, prioritize hazards, and alert emergency dispatches. Click on the map to set coordinates, upload photos, and verify active safety paths.
+                                </p>
+                            </div>
+
+                            <div class="bg-white rounded-3xl p-5 border border-gray-200">
+                                <h4 class="text-xs font-extrabold text-brandCharcoal mb-3 uppercase tracking-wider">Report Community Defect</h4>
+                                <form id="citizen-form" onsubmit="submitForm(event)" class="flex flex-col gap-4">
+                                    
+                                    <!-- Dynamic spatial coordinates -->
+                                    <div>
+                                        <label class="text-[10px] font-extrabold uppercase text-gray-400 block mb-1">Set Geolocation Coordinates (Click Map to auto-fill)</label>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <input type="number" step="any" id="cit-form-lat" placeholder="Latitude" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-brandOrange" required>
+                                            <input type="number" step="any" id="cit-form-lon" placeholder="Longitude" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-brandOrange" required>
+                                        </div>
+                                    </div>
+
+                                    <!-- Quick-inject presets for easier simulation testing -->
+                                    <div>
+                                        <label class="text-[10px] font-extrabold uppercase text-gray-400 block mb-1.5">Evidence Snapshot Presets</label>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <button type="button" onclick="injectPreset('pothole')" class="bg-gray-50 hover:bg-gray-100 border border-gray-200 text-left p-2 rounded-xl transition-all flex items-center gap-2">
+                                                <div class="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-brandOrange text-xs shrink-0"><i class="fa-solid fa-camera"></i></div>
+                                                <div>
+                                                    <p class="text-[9px] font-extrabold text-brandCharcoal uppercase">Pothole Anomaly</p>
+                                                    <p class="text-[8px] text-gray-400">Sample Template</p>
+                                                </div>
+                                            </button>
+                                            <button type="button" onclick="injectPreset('flooding')" class="bg-gray-50 hover:bg-gray-100 border border-gray-200 text-left p-2 rounded-xl transition-all flex items-center gap-2">
+                                                <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-500 text-xs shrink-0"><i class="fa-solid fa-droplet"></i></div>
+                                                <div>
+                                                    <p class="text-[9px] font-extrabold text-brandCharcoal uppercase">Drainage Flooding</p>
+                                                    <p class="text-[8px] text-gray-400">Sample Template</p>
+                                                </div>
+                                            </button>
+                                        </div>
+
+                                        <div class="mt-3 bg-slate-50 border border-dashed border-slate-300 rounded-2xl p-4 flex flex-col items-center justify-center cursor-pointer relative hover:border-brandOrange transition-all">
+                                            <input type="file" id="citizen-photo" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" onchange="handleFileSelect(event)">
+                                            <i class="fa-solid fa-cloud-arrow-up text-slate-400 text-xl mb-1.5"></i>
+                                            <span id="cit-file-label" class="text-xs font-bold text-slate-600">Upload your phone snapshot</span>
+                                            <span class="text-[9px] text-slate-400 mt-0.5">Supports high precision camera metadata</span>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="text-[10px] font-extrabold uppercase text-gray-400 block mb-1">What did you observe? (Field notes)</label>
+                                        <textarea id="cit-form-note" placeholder="E.g. Asphalt cave-in, deep puddle blocks pedestrian lane, light offline..." class="w-full bg-gray-50 border border-gray-200 rounded-2xl p-3 text-xs font-medium focus:outline-none focus:border-brandOrange h-20 resize-none"></textarea>
+                                    </div>
+
+                                    <button type="submit" id="cit-btn-submit" class="w-full bg-brandOrange hover:bg-orange-600 text-white font-extrabold py-3.5 rounded-2xl text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-bolt animate-pulse"></i>
+                                        <span id="cit-btn-submit-text">Submit Urgent Report</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- TAB: Citizen Track My Submissions -->
+                        <div id="tab-citizen-my-reports" class="hidden flex-1 flex flex-col overflow-y-auto p-5 sm:p-6 gap-6">
+                            <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+                                <h3 class="text-sm font-extrabold text-brandCharcoal">My Active Submissions</h3>
+                                <span class="text-[10px] bg-brandGreyBg px-2 py-0.5 rounded-full text-gray-500 font-extrabold uppercase" id="cit-report-count">0 items</span>
+                            </div>
+                            <div class="flex flex-col gap-3" id="citizen-submissions-list">
+                                <!-- Populated dynamically from filtered local database items -->
+                            </div>
+                        </div>
+
+                        <!-- TAB: Citizen Commute Safe Routing -->
+                        <div id="tab-citizen-safe-routing" class="hidden flex-1 flex flex-col overflow-y-auto p-5 sm:p-6 gap-6">
+                            <div class="bg-gray-50 rounded-3xl p-5 border border-gray-150">
+                                <h3 class="text-sm font-extrabold text-brandCharcoal mb-1 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-shield-halved text-brandOrange"></i> Daily Commute Safety
+                                </h3>
+                                <p class="text-[11px] text-gray-400 leading-normal mb-4">Protect your vehicle. Avoid structural potholes, active storm runoff zones, or offline intersections along your travel routes.</p>
+
+                                <div class="flex flex-col gap-3">
+                                    <div>
+                                        <label class="text-[10px] font-extrabold uppercase text-gray-400 block mb-1">Departure Point (Start Location)</label>
+                                        <input type="text" id="cit-route-start" placeholder="e.g. Connaught Place" class="bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold w-full focus:outline-none focus:border-brandOrange">
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] font-extrabold uppercase text-gray-400 block mb-1">Destination Target (End Location)</label>
+                                        <input type="text" id="cit-route-end" placeholder="e.g. India Gate" class="bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold w-full focus:outline-none focus:border-brandOrange">
+                                    </div>
+                                    
+                                    <button onclick="calculateSafeRoutes()" id="cit-btn-calculate-route" class="w-full bg-brandCharcoal hover:bg-black text-white font-extrabold py-3.5 rounded-2xl text-xs uppercase tracking-wider transition-all shadow-md flex justify-center items-center gap-1.5">
+                                        <i class="fa-solid fa-map-location-dot text-brandOrange"></i> <span>Calculate Safe Commute</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="cit-routing-comparison" class="hidden flex flex-col gap-3">
+                                <h4 class="text-[10px] font-extrabold text-gray-400 tracking-wider uppercase">Hazard Avoidance Path Analysis</h4>
+                                <div id="cit-dynamic-route-result" class="bg-white border-2 border-brandOrange rounded-2xl p-4 flex items-center justify-between premium-shadow relative overflow-hidden">
+                                    <div id="cit-route-status-badge" class="absolute -top-1 -right-1 bg-brandOrange text-white text-[8px] font-extrabold uppercase px-2 py-0.5 rounded-bl-lg">Recommended</div>
+                                    <div>
+                                        <span id="cit-route-result-title" class="text-xs font-extrabold text-brandCharcoal block font-bold">AI Computed Route</span>
+                                        <span id="cit-route-result-subtitle" class="text-[10px] text-gray-400 font-semibold block mt-1">Calculating via AI...</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <span id="cit-route-result-risk" class="text-xs font-extrabold text-emerald-600 block">Risk: 0</span>
+                                        <span id="cit-route-result-metrics" class="text-[10px] text-gray-400 font-semibold block mt-0.5">-- Mins</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- SIMULATED EMERGENCY TELEPHONY AND VoIP OUTFLOWS -->
+                    <div class="border-t border-gray-100 p-5 sm:p-6 bg-slate-50 shrink-0">
+                        <div class="flex items-center justify-between mb-2">
+                            <span id="twilio-label" class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Emergency Dispatch Console (Twilio VoIP)</span>
+                            <span class="flex items-center gap-1">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                                <span class="text-[9px] text-emerald-600 font-extrabold uppercase tracking-wide">Connected Live</span>
+                            </span>
+                        </div>
+                        <div id="twilio-voice-log" class="bg-brandCharcoal text-slate-300 font-mono text-[10px] p-3 rounded-2xl h-24 overflow-y-auto flex flex-col gap-1.5 shadow-inner border border-slate-800">
+                            <div class="text-emerald-400">[SYSTEM] Twilio Voice dispatch protocol online.</div>
+                            <div class="text-slate-400">[IDLE] Scanning live environment feeds for high-confidence anomalies.</div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- HIDDEN CANVAS FOR INSTAGRAM/SOCIAL SHARE GENERATOR -->
+    <div id="share-card-modal" class="hidden fixed inset-0 z-[6000] flex items-center justify-center bg-black/75 p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 flex flex-col gap-4 relative">
+            <button onclick="closeShareModal()" class="absolute top-4 right-4 text-gray-400 hover:text-brandCharcoal"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <h3 class="text-sm font-extrabold text-brandCharcoal uppercase tracking-wider mb-1"><i class="fa-brands fa-instagram text-brandOrange"></i> Export Civic Share Card</h3>
+            <p class="text-[10px] text-gray-400 leading-normal">Creates a secure, watermarked graphic featuring Gemini AI analysis to post onto social channels.</p>
+            
+            <div class="border border-gray-200 rounded-2xl overflow-hidden shadow-sm flex items-center justify-center bg-gray-100">
+                <canvas id="instagram-canvas" width="400" height="400" class="max-w-full h-auto rounded-2xl border border-gray-200"></canvas>
+            </div>
+            
+            <button onclick="downloadShareCard()" class="w-full bg-brandOrange hover:bg-orange-600 text-white font-extrabold py-3 rounded-2xl text-xs uppercase tracking-wider shadow-md flex items-center justify-center gap-2">
+                <i class="fa-solid fa-download"></i> Download Export Graphic
+            </button>
+        </div>
+    </div>
+
+    <!-- CODE SCRIPT LOGIC SECTION -->
+        <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/console_main.js') }}"></script>
+
+</body>
+</html>

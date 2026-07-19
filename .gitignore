@@ -1,0 +1,26 @@
+# Virtual Environment
+venv/
+.venv/
+env/
+
+# IDEs and OS files
+.DS_Store
+.vscode/
+.idea/
+
+# Environment configurations
+.env
+
+# Local Databases
+instance/
+*.db
+*.sqlite3
+
+# Uploaded assets
+uploads/
+static/uploads/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class

@@ -1,0 +1,1994 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-900">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RoadPulse AI — Traffic & Infrastructure Intelligence Hub</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brandOrange: '#ff7a22',
+                        brandCharcoal: '#1d1f23',
+                        brandGreyBg: '#f4f5f8',
+                        brandSageBg: '#e2eedd',
+                        brandSageText: '#235032',
+                        brandBorder: '#e5e7eb',
+                        brandDarkCharcoal: '#121316'
+                    },
+                    borderRadius: {
+                        '3xl': '1.5rem',
+                        '4xl': '2rem'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Leaflet GIS Map CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f4f5f8;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Custom Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Map styling */
+        #map {
+            height: 100%;
+            width: 100%;
+            z-index: 1;
+        }
+
+        /* Elevated modern shadows */
+        .premium-shadow {
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+        }
+        
+        .active-nav-item {
+            background-color: #ff7a22;
+            color: white !important;
+            box-shadow: 0 4px 12px rgba(255, 122, 34, 0.3);
+        }
+        
+        /* Computer Vision radar simulation */
+        .scan-line {
+            background: linear-gradient(to bottom, rgba(255, 122, 34, 0) 0%, rgba(255, 122, 34, 0.3) 50%, rgba(255, 122, 34, 0) 100%);
+            animation: scan 2.5s linear infinite;
+        }
+        @keyframes scan {
+            0% { top: -100%; }
+            100% { top: 100%; }
+        }
+
+        /* Collapsible transitions */
+        .sidebar-transition {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex overflow-hidden bg-[#f4f5f8] text-brandCharcoal">
+
+    <!-- UNIFIED SIGN-IN GATEWAY -->
+    <div id="login-screen" class="absolute inset-0 z-[5000] flex bg-brandDarkCharcoal overflow-y-auto">
+        <!-- Visual Promo Split Side -->
+        <div class="hidden lg:flex w-1/2 relative bg-cover bg-center overflow-hidden flex-col justify-between p-12 text-white border-r border-slate-800" style="background-image: linear-gradient(135deg, rgba(29, 31, 35, 0.95), rgba(255, 122, 34, 0.15)), url('https://placehold.co/1200x800/1d1f23/334155?text=Smart+City+GIS+Network');">
+            <!-- Header Brand -->
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-brandOrange rounded-2xl flex items-center justify-center text-white font-extrabold text-2xl shadow-lg shadow-brandOrange/20">
+                    R
+                </div>
+                <div>
+                    <span class="text-xs uppercase tracking-widest text-brandOrange font-bold">Hackathon Core Platform</span>
+                    <h2 class="text-lg font-extrabold tracking-tight">RoadPulse AI Hub</h2>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div>
+                <p class="text-xs uppercase tracking-widest text-brandOrange font-extrabold mb-2">INTELLIGENT URBAN MOBILITY</p>
+                <h3 class="text-4xl font-black tracking-tight leading-none mb-4">Empowering Cities via Computer Vision & GIS</h3>
+                <p class="text-slate-300 text-sm max-w-md leading-relaxed">
+                    Bridging the gap between municipal departments, active transit operations, and residents. File reports powered by instant Gemini-based reasoning and automated dispatching.
+                </p>
+            </div>
+
+            <!-- Footer Meta -->
+            <div class="flex justify-between items-center text-xs text-slate-500 font-medium">
+                <span>Hackathon Edition v4.5.1</span>
+                <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-brandOrange animate-ping"></span> Nodes Sync'd</span>
+            </div>
+            
+            <div class="absolute inset-0 scan-line pointer-events-none opacity-40"></div>
+        </div>
+
+        <!-- Unified Login Form Container -->
+        <div class="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12 relative bg-[#15171a]">
+            <div class="w-full max-w-md bg-brandCharcoal/80 p-8 rounded-3xl border border-slate-800 backdrop-blur-md premium-shadow relative z-10">
+                <div class="mb-6 text-center">
+                    <h1 class="text-2xl font-black text-white tracking-tight mb-1">Urban Console Login</h1>
+                    <p class="text-xs text-slate-400">Please provide your credentials to switch between workspace views</p>
+                </div>
+
+                <!-- Sign-In Form Elements -->
+                <form onsubmit="handleUnifiedLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="text-[10px] font-extrabold uppercase text-slate-400 block mb-1.5">Username / Identifier</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs"><i class="fa-solid fa-user"></i></span>
+                            <input type="text" id="login-username" placeholder="Enter username..." class="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-800 text-white rounded-2xl text-xs font-semibold focus:outline-none focus:border-brandOrange transition-all" required>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] font-extrabold uppercase text-slate-400 block mb-1.5">Access Password</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs"><i class="fa-solid fa-lock"></i></span>
+                            <input type="password" id="login-password" placeholder="••••••••" class="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-800 text-white rounded-2xl text-xs font-semibold focus:outline-none focus:border-brandOrange transition-all" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-brandOrange hover:bg-orange-600 text-white font-extrabold py-3.5 rounded-2xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-brandOrange/20 flex items-center justify-center gap-2 mt-2">
+                        <span>Authenticate Access</span>
+                        <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                    </button>
+                </form>
+
+                <!-- Demo Access Presets helper widgets -->
+                <div class="mt-8 pt-6 border-t border-slate-800/80">
+                    <span class="text-[10px] font-extrabold uppercase text-slate-500 block mb-3 text-center">Quick-Fill Demo Credentials</span>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="fillAndLogin('citizen', 'user2026')" class="bg-slate-900/40 hover:bg-slate-900 border border-slate-800 text-left p-3 rounded-2xl transition-all group">
+                            <div class="text-brandOrange font-bold text-xs mb-0.5 group-hover:text-white transition-colors flex items-center gap-1.5">
+                                <i class="fa-solid fa-users"></i> Citizen Portal
+                            </div>
+                            <span class="text-[9px] text-slate-400 block">Username: citizen</span>
+                            <span class="text-[9px] text-slate-400 block">Password: user2026</span>
+                        </button>
+                        <button onclick="fillAndLogin('admin', 'pulse2026')" class="bg-slate-900/40 hover:bg-slate-900 border border-slate-800 text-left p-3 rounded-2xl transition-all group">
+                            <div class="text-amber-500 font-bold text-xs mb-0.5 group-hover:text-white transition-colors flex items-center gap-1.5">
+                                <i class="fa-solid fa-user-shield"></i> Operator Hub
+                            </div>
+                            <span class="text-[9px] text-slate-400 block">Username: admin</span>
+                            <span class="text-[9px] text-slate-400 block">Password: pulse2026</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP SHELL CONTAINER -->
+    <div id="app-shell" class="hidden flex-1 flex h-full w-full overflow-hidden">
+
+        <!-- COLLAPSIBLE LEFT NAVIGATION SIDEBAR -->
+        <aside id="main-navigation-sidebar" class="my-4 ml-4 mr-2 bg-white rounded-4xl flex flex-col items-center justify-between py-6 premium-shadow border border-gray-100 z-10 shrink-0 sidebar-transition w-20">
+            <div class="flex flex-col items-center gap-8 w-full">
+                <!-- App Logo & Sidebar Toggle Handle -->
+                <div class="relative flex flex-col items-center">
+                    <div class="w-12 h-12 bg-brandCharcoal rounded-2xl flex items-center justify-center text-white font-extrabold text-2xl relative transition-transform hover:scale-105 cursor-pointer">
+                        R
+                        <span class="absolute right-0 bottom-0 w-3 h-3 bg-brandOrange rounded-full border-2 border-white"></span>
+                    </div>
+                    <!-- Sidebar collapse trigger toggle -->
+                    <button onclick="toggleNavigationSidebar()" class="absolute -right-3 -bottom-3 bg-white hover:bg-gray-100 text-brandCharcoal hover:text-brandOrange w-6 h-6 rounded-full border border-gray-200 shadow flex items-center justify-center transition-all" title="Toggle Sidebar Expand">
+                        <i id="nav-collapse-icon" class="fa-solid fa-angles-left text-[10px]"></i>
+                    </button>
+                </div>
+                
+                <!-- ADMINISTRATIVE / OPERATOR TAB ACTIONS -->
+                <nav id="nav-operator-group" class="flex flex-col gap-4 w-full px-3">
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full h-12 flex items-center gap-3 justify-center text-gray-400 hover:text-brandCharcoal hover:bg-gray-100 rounded-2xl transition-all duration-300" title="Operations Overview">
+                        <i class="fa-solid fa-house text-lg"></i>
+                        <span class="hidden sidebar-label text-xs font-bold whitespace-nowrap text-left flex-1">Overview Dashboard</span>
+                    </button>
+                    <button onclick="switchTab('reports')" id="nav-reports" class="w-full h-12 flex items-center gap-3 justify-center text-gray-400 hover:text-brandCharcoal hover:bg-gray-100 rounded-2xl transition-all duration-300" title="Deploy Manual Dispatch">
+                        <i class="fa-solid fa-file-circle-plus text-lg"></i>
+                        <span class="hidden sidebar-label text-xs font-bold whitespace-nowrap text-left flex-1">Manual Dispatches</span>
+                    </button>
+                    <button onclick="switchTab('routing')" id="nav-routing" class="w-full h-12 flex items-center gap-3 justify-center text-gray-400 hover:text-brandCharcoal hover:bg-gray-100 rounded-2xl transition-all duration-300" title="Dynamic Safe Routing">
+                        <i class="fa-solid fa-route text-lg"></i>
+                        <span class="hidden sidebar-label text-xs font-bold whitespace-nowrap text-left flex-1">Avoidance Router</span>
+                    </button>
+                    <button onclick="switchTab('analytics')" id="nav-analytics" class="w-full h-12 flex items-center gap-3 justify-center text-gray-400 hover:text-brandCharcoal hover:bg-gray-100 rounded-2xl transition-all duration-300" title="Public Metrics & SLA">
+                        <i class="fa-solid fa-chart-line text-lg"></i>
+                        <span class="hidden sidebar-label text-xs font-bold whitespace-nowrap text-left flex-1">Telemetry Metrics</span>
+                    </button>
+                </nav>
+
+                <!-- CITIZEN PORTAL TAB ACTIONS -->
+                <nav id="nav-citizen-group" class="hidden flex flex-col gap-4 w-full px-3">
+                    <button onclick="switchTab('citizen-report')" id="nav-citizen-report" class="w-full h-12 flex items-center gap-3 justify-center text-gray-400 hover:text-brandCharcoal hover:bg-gray-100 rounded-2xl transition-all duration-300 active-nav-item" title="Report Community Issue">
+                        <i class="fa-solid fa-circle-plus text-lg"></i>
+                        <span class="hidden sidebar-label text-xs font-bold whitespace-nowrap text-left flex-1">File Report</span>
+                    </button>
+                    <button onclick="switchTab('citizen-my-reports')" id="nav-citizen-my-reports" class="w-full h-12 flex items-center gap-3 justify-center text-gray-400 hover:text-brandCharcoal hover:bg-gray-100 rounded-2xl transition-all duration-300" title="Track My Submissions">
+                        <i class="fa-solid fa-clock-rotate-left text-lg"></i>
+                        <span class="hidden sidebar-label text-xs font-bold whitespace-nowrap text-left flex-1">My Filed Reports</span>
+                    </button>
+                    <button onclick="switchTab('citizen-safe-routing')" id="nav-citizen-safe-routing" class="w-full h-12 flex items-center gap-3 justify-center text-gray-400 hover:text-brandCharcoal hover:bg-gray-100 rounded-2xl transition-all duration-300" title="Commute Safe Paths">
+                        <i class="fa-solid fa-shield-halved text-lg"></i>
+                        <span class="hidden sidebar-label text-xs font-bold whitespace-nowrap text-left flex-1">Commuter Safety</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Exit and User Status footer with Trust Score Indicator -->
+            <div class="flex flex-col items-center gap-4 w-full px-3">
+                <!-- User reputation Trust Badge -->
+                <div class="flex flex-col items-center justify-center bg-brandGreyBg px-2 py-1.5 rounded-xl border border-gray-100 shadow-sm text-center" title="Citizen/Operator Trust score metric">
+                    <span class="text-[7px] text-gray-400 font-bold uppercase tracking-wider block">Trust Score</span>
+                    <span id="user-trust-badge" class="text-xs font-black text-brandOrange font-mono">50</span>
+                </div>
+                
+                <button onclick="logOut()" class="w-10 h-10 bg-rose-50 border border-rose-100 hover:bg-rose-100 rounded-full flex items-center justify-center text-rose-500 transition-all" title="Exit Workspace / Lock Session">
+                    <i class="fa-solid fa-arrow-right-from-bracket text-sm"></i>
+                </button>
+                <div class="w-10 h-10 rounded-full border-2 border-brandOrange overflow-hidden shadow-inner cursor-pointer" title="Active Account Identity">
+                    <img id="avatar-user" src="https://placehold.co/100x100/1d1f23/ffffff?text=AD" alt="User Avatar" class="w-full h-full object-cover">
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN INTERACTIVE SPACE -->
+        <main class="flex-1 flex flex-col h-full overflow-hidden p-3 md:p-4 relative">
+            
+            <!-- TOP BREADCRUMB HEADER AREA -->
+            <header class="flex flex-col md:flex-row md:items-center justify-between mb-3 shrink-0 gap-2">
+                <div>
+                    <div class="flex items-center gap-2 text-xs text-gray-400 font-medium">
+                        <span id="header-platform-label">RoadPulse AI platform</span>
+                        <span>/</span>
+                        <span id="header-workspace-label">Overview Console</span>
+                        <span>/</span>
+                        <span class="text-brandOrange font-bold" id="breadcrumb-current">Overview</span>
+                    </div>
+                    <div class="flex items-center gap-3 mt-0.5">
+                        <h1 class="text-xl md:text-2xl font-extrabold text-brandCharcoal tracking-tight">
+                            Smart-City Incident Control Console
+                        </h1>
+                        <span id="workspace-badge" class="text-[10px] font-semibold bg-brandCharcoal text-white px-2.5 py-0.5 rounded-full uppercase tracking-wider hidden sm:inline-block">2026 Engine v4.5</span>
+                    </div>
+                </div>
+
+                <!-- Global Filter Controls -->
+                <div class="flex items-center gap-3 self-end md:self-auto">
+                    <div class="relative w-44 sm:w-60">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                        <input type="text" id="global-search" onkeyup="filterLiveLog()" placeholder="Search incidents, wards..." class="w-full pl-9 pr-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs text-gray-700 placeholder-gray-400 focus:outline-none focus:border-brandOrange transition-all shadow-sm">
+                    </div>
+                    <!-- Status message dynamic badge -->
+                    <div id="toast-notif" class="hidden flex items-center gap-2 bg-[#e2eedd] border border-[#235032]/20 text-[#235032] py-1.5 px-3 rounded-full text-xs font-bold animate-pulse shadow-sm">
+                        <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+                        <span id="toast-message">Real-time GPS tracker online.</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- MOBILE NAVIGATION BAR (Only visible on micro screens) -->
+            <div id="mobile-navigation-bar" class="flex md:hidden bg-white p-1 rounded-xl mb-3 shadow-sm border border-gray-100 shrink-0 gap-1">
+                <!-- Populated dynamically based on role -->
+            </div>
+
+            <!-- VIEWPORT SPACE FOR MAP & SIDEBAR PANELS -->
+            <div class="flex-1 flex flex-col lg:flex-row gap-4 overflow-hidden relative">
+
+                <!-- GEOGRAPHIC LEAFLET MAP VIEWPORT -->
+                <section class="flex-1 bg-white rounded-3xl premium-shadow overflow-hidden border border-gray-100 flex flex-col relative min-h-[300px]">
+                    <!-- Floating Map Layer Selection Controller -->
+                    <div class="absolute top-4 left-4 z-[1000] flex items-center gap-1.5 bg-white/95 backdrop-blur-md p-1.5 rounded-2xl shadow-lg border border-gray-100">
+                        <button onclick="toggleMapLayer('markers')" id="layer-btn-markers" class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all bg-brandOrange text-white shadow-sm flex items-center gap-1.5">
+                            <i class="fa-solid fa-location-dot"></i> <span>Pins View</span>
+                        </button>
+                        <button onclick="toggleMapLayer('heat')" id="layer-btn-heat" class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all text-gray-600 hover:bg-gray-100 flex items-center gap-1.5">
+                            <i class="fa-solid fa-fire"></i> <span>Heatmap</span>
+                        </button>
+                    </div>
+
+                    <!-- Map Severity Color Legends -->
+                    <div class="absolute bottom-4 right-4 z-[1000] bg-white/95 backdrop-blur-md p-2.5 rounded-xl shadow-md border border-gray-100 text-[10px] font-bold flex flex-col gap-1 hidden sm:flex">
+                        <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Critical Severity</div>
+                        <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-orange-400"></span> High Severity</div>
+                        <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Medium Severity</div>
+                    </div>
+
+                    <!-- Main Leaflet Map Canvas Node -->
+                    <div class="flex-1" id="map"></div>
+
+                    <!-- MAP INTERACTIVE DRAWER (Expands incident parameters & exposes Explainable AI math) -->
+                    <div id="incident-detail-drawer" class="hidden absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-lg rounded-3xl p-4 sm:p-5 border border-gray-200/80 shadow-2xl z-[1000] max-h-[85%] sm:max-h-80 overflow-y-auto transition-all duration-300">
+                        <div class="flex justify-between items-start mb-3 border-b border-gray-100 pb-3">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span id="drawer-type" class="text-sm font-extrabold text-brandCharcoal uppercase tracking-wider">Pothole</span>
+                                    <span id="drawer-severity" class="text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase">Critical</span>
+                                </div>
+                                <p id="drawer-location" class="text-[11px] text-gray-500 mt-0.5"><i class="fa-solid fa-location-crosshairs mr-1 text-brandOrange"></i> Ward 12, Main Street Boulevard</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] text-gray-400 bg-gray-50 border border-gray-100 px-2.5 py-1 rounded-full font-mono font-bold" id="drawer-id">INC-101</span>
+                                <button onclick="closeDetailDrawer()" class="text-gray-400 hover:text-brandCharcoal text-sm font-bold bg-gray-100 hover:bg-gray-200 h-8 w-8 rounded-full flex items-center justify-center transition-all">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Detailed intelligence metrics grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <!-- Image display container with scanner animation overlay & Action Trigger overlays -->
+                            <div class="h-32 bg-gray-100 rounded-2xl overflow-hidden relative border border-gray-200 flex flex-col justify-end">
+                                <img id="drawer-image" src="" class="w-full h-full object-cover absolute inset-0 z-0" alt="Anomaly Preview">
+                                <div class="absolute inset-0 scan-line pointer-events-none z-10"></div>
+                                
+                                <!-- Watermarked Instagram Generator Option overlay -->
+                                <div class="absolute inset-0 z-10 bg-gradient-to-t from-brandCharcoal/80 via-transparent to-transparent opacity-0 hover:opacity-100 transition-all flex items-end justify-center pb-2">
+                                    <button onclick="generateInstagramCard()" class="bg-brandOrange hover:bg-orange-600 text-white font-extrabold px-3 py-1.5 rounded-xl text-[9px] uppercase tracking-wide transition-all shadow-md flex items-center gap-1.5">
+                                        <i class="fa-brands fa-instagram"></i> <span>Share Evidence</span>
+                                    </button>
+                                </div>
+
+                                <div class="relative z-10 m-1.5 bg-brandCharcoal/80 backdrop-blur-sm px-2 py-0.5 rounded text-[8px] font-mono font-bold text-emerald-400 flex items-center gap-1 w-fit">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> AI VERIFIED
+                                </div>
+                            </div>
+
+                            <!-- Gemini explanation details & Live tel: triggers -->
+                            <div class="col-span-1 flex flex-col justify-between">
+                                <div>
+                                    <h5 class="text-[10px] uppercase tracking-wider text-gray-400 font-extrabold mb-1">Gemini Vision Intelligence</h5>
+                                    <p id="drawer-ai-reasoning" class="text-xs text-gray-600 leading-relaxed font-semibold">Asphalt structural integrity failure detected. Recommended routing adjustment issued to Municipal Road Dept.</p>
+                                </div>
+                                <div class="mt-2 flex flex-col gap-1.5">
+                                    <div class="bg-brandSageBg border border-brandSageText/15 text-brandSageText text-[10px] font-extrabold px-2.5 py-1.5 rounded-xl flex items-center justify-between">
+                                        <span class="flex items-center gap-1.5">
+                                            <i class="fa-solid fa-building-shield"></i>
+                                            <span id="drawer-routing-target">Municipal Road Dept</span>
+                                        </span>
+                                    </div>
+                                    <!-- Embedded direct dialing hook (Saves critical hackathon demo execution paths) -->
+                                    <a id="drawer-phone-action" href="tel:+15550199" class="bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-extrabold px-2.5 py-1.5 rounded-xl flex items-center justify-center gap-1.5 hover:bg-rose-100 transition-all">
+                                        <i class="fa-solid fa-phone"></i> Dial Emergency Escalation Desk
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Transparent Confidence Score Formula plotting (Explainable AI - XAI) -->
+                            <div class="col-span-1 bg-slate-50 p-3 rounded-2xl border border-gray-150">
+                                <h5 class="text-[10px] uppercase tracking-wider text-slate-500 font-extrabold mb-1 flex items-center justify-between">
+                                    <span>Confidence Matrix (XAI)</span>
+                                    <span class="text-brandOrange font-mono text-[9px]" id="drawer-confidence-total">e = 0.85</span>
+                                </h5>
+                                <p class="text-[8px] text-gray-400 font-semibold mb-2 leading-tight">Formula: 50% ML + 25% Votes + 15% GPS + 10% Trust</p>
+                                <div class="flex flex-col gap-1.5 text-[9px] font-semibold text-gray-500">
+                                    <div class="flex justify-between items-center">
+                                        <span>Gemini Core ML (50%)</span>
+                                        <span id="formula-ml-label" class="font-mono text-[8px]">0.41</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span>Consensus Votes (25%)</span>
+                                        <span id="formula-votes-label" class="font-mono text-[8px]">0.16</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span>GPS Quality (15%)</span>
+                                        <span id="formula-gps-label" class="font-mono text-[8px]">0.15</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span>User Trust Rate (10%)</span>
+                                        <span id="formula-trust-label" class="font-mono text-[8px]">0.05</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Community Consensus parameters -->
+                            <div class="col-span-1 bg-gray-50 rounded-2xl p-3 border border-gray-150 flex flex-col justify-between">
+                                <div>
+                                    <h5 class="text-[10px] uppercase tracking-wider text-gray-400 font-extrabold mb-1">Community Consensus</h5>
+                                    <div class="flex items-center gap-1.5 mt-1">
+                                        <span id="drawer-confirmations" class="text-xl font-extrabold text-brandCharcoal">2</span>
+                                        <span class="text-[10px] text-gray-400 font-bold">Consensus votes</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 h-1.5 rounded-full mt-2 overflow-hidden">
+                                        <div id="drawer-consensus-bar" class="bg-brandOrange h-full transition-all duration-500" style="width: 66%"></div>
+                                    </div>
+                                </div>
+                                <div class="flex gap-2 mt-2">
+                                    <button onclick="voteOnDrawerIncident('confirm')" class="flex-1 bg-brandCharcoal hover:bg-black text-white text-[10px] py-2 font-bold rounded-lg uppercase tracking-wider transition-all">Agree</button>
+                                    <button onclick="voteOnDrawerIncident('reject')" class="flex-1 bg-white hover:bg-gray-100 text-brandCharcoal border border-gray-200 text-[10px] py-2 font-bold rounded-lg uppercase tracking-wider transition-all">Reject</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- COLLAPSIBLE RIGHT INTERACTIVE CONSOLE SIDEBAR PANEL (WHITE CAP) -->
+                <section id="sidebar-panel" class="w-full lg:w-[450px] bg-white rounded-3xl premium-shadow border border-gray-100 flex flex-col overflow-hidden relative sidebar-transition shrink-0">
+                    
+                    <!-- Sidebar collapse switch trigger button (Large displays only) -->
+                    <button onclick="toggleSidebarPanel()" class="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-12 bg-white hover:bg-gray-50 text-gray-400 hover:text-brandCharcoal rounded-full border border-gray-200 shadow-md flex items-center justify-center z-[1001] focus:outline-none transition-all hidden lg:flex">
+                        <i id="sidebar-toggle-icon" class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
+
+                    <!-- OPERATOR HUB INTERFACES -->
+                    <div id="operator-views-container" class="flex-1 flex flex-col overflow-hidden">
+                        
+                        <!-- TAB: Operations Dashboard -->
+                        <div id="tab-dashboard" class="flex-1 flex flex-col overflow-y-auto p-5 sm:p-6 gap-6">
+                            <!-- High-level live status widgets -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-brandSageBg rounded-3xl p-4 sm:p-5 border border-brandSageText/10 flex flex-col justify-between h-36">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[10px] font-extrabold text-brandSageText uppercase tracking-wider">Network Trust</span>
+                                        <span class="bg-white/90 text-brandSageText text-[8px] px-2 py-0.5 rounded-full font-bold uppercase">Optimal</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-2xl sm:text-3xl font-extrabold text-brandSageText" id="widget-trust">84.2%</span>
+                                        <p class="text-[10px] text-brandSageText/70 font-bold mt-1">Consistency with Gemini ML classifications</p>
+                                    </div>
+                                </div>
+
+                                <div class="bg-brandOrange text-white rounded-3xl p-4 sm:p-5 flex flex-col justify-between h-36 premium-shadow relative overflow-hidden">
+                                    <span class="absolute -right-6 -bottom-6 text-white/5 text-8xl font-black select-none pointer-events-none">AI</span>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[10px] font-extrabold uppercase tracking-wider">Dispatch Calls</span>
+                                        <span class="bg-white/25 text-white text-[8px] px-2 py-0.5 rounded-full font-bold uppercase">VoIP Live</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-2xl sm:text-3xl font-extrabold" id="widget-dispatches">12</span>
+                                        <p class="text-[10px] text-white/80 font-bold mt-1">Automated phone call dispatches resolved</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Active GIS incidents checklist -->
+                            <div>
+                                <div class="flex items-center justify-between mb-3 border-b border-gray-100 pb-2">
+                                    <h3 class="text-sm font-extrabold text-brandCharcoal tracking-tight">Active GIS Incidents</h3>
+                                    <span class="text-[10px] bg-brandGreyBg px-2 py-0.5 rounded-full text-gray-500 font-extrabold uppercase" id="log-count">4 items</span>
+                                </div>
+                                <div class="flex flex-col gap-2.5 max-h-[350px] overflow-y-auto pr-1" id="log-feed-container">
+                                    <!-- Populated dynamically -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB: Manual Dispatch Intake -->
+                        <div id="tab-reports" class="hidden flex-1 flex flex-col overflow-y-auto p-5 sm:p-6 gap-6">
+                            <div class="bg-gray-50 rounded-3xl p-4 border border-gray-150">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span class="w-2.5 h-2.5 bg-brandOrange rounded-full animate-ping"></span>
+                                    <h3 class="text-sm font-extrabold text-brandCharcoal">Dispatch Incident Report</h3>
+                                </div>
+
+                                <!-- Standard preset templates -->
+                                <div class="mb-4">
+                                    <span class="text-[10px] text-gray-400 font-extrabold uppercase block mb-1.5">Simulation Presets</span>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <button onclick="injectPreset('pothole')" class="bg-white hover:bg-gray-100 border border-gray-200 text-left p-2 rounded-xl transition-all flex items-center gap-2">
+                                            <div class="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center text-rose-500 text-xs shrink-0"><i class="fa-solid fa-circle-radiation"></i></div>
+                                            <div>
+                                                <p class="text-[9px] font-extrabold text-brandCharcoal uppercase">Pothole</p>
+                                                <p class="text-[8px] text-gray-400 font-medium">Main St Blvd</p>
+                                            </div>
+                                        </button>
+                                        <button onclick="injectPreset('flooding')" class="bg-white hover:bg-gray-100 border border-gray-200 text-left p-2 rounded-xl transition-all flex items-center gap-2">
+                                            <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500 text-xs shrink-0"><i class="fa-solid fa-droplet"></i></div>
+                                            <div>
+                                                <p class="text-[9px] font-extrabold text-brandCharcoal uppercase">Flood</p>
+                                                <p class="text-[8px] text-gray-400 font-medium">Drainage Block</p>
+                                            </div>
+                                        </button>
+                                        <button onclick="injectPreset('broken_signal')" class="bg-white hover:bg-gray-100 border border-gray-200 text-left p-2 rounded-xl transition-all flex items-center gap-2">
+                                            <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-500 text-xs shrink-0"><i class="fa-solid fa-traffic-light"></i></div>
+                                            <div>
+                                                <p class="text-[9px] font-extrabold text-brandCharcoal uppercase">Broken Signal</p>
+                                                <p class="text-[8px] text-gray-400 font-medium">Intersection 14</p>
+                                            </div>
+                                        </button>
+                                        <button onclick="injectPreset('accident')" class="bg-white hover:bg-gray-100 border border-gray-200 text-left p-2 rounded-xl transition-all flex items-center gap-2">
+                                            <div class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-500 text-xs shrink-0"><i class="fa-solid fa-car-burst"></i></div>
+                                            <div>
+                                                <p class="text-[9px] font-extrabold text-brandCharcoal uppercase">Collision</p>
+                                                <p class="text-[8px] text-gray-400 font-medium">Highway Route 5</p>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Manual reporting elements -->
+                                <form id="incident-form" onsubmit="submitForm(event)" class="flex flex-col gap-3">
+                                    <div>
+                                        <label class="text-[10px] font-extrabold uppercase text-gray-400 block mb-1">Visual Evidence Image</label>
+                                        <div class="bg-white border border-gray-200 rounded-2xl p-3 flex items-center gap-3 relative cursor-pointer hover:border-brandOrange transition-all">
+                                            <div class="w-10 h-10 bg-orange-50 text-brandOrange rounded-xl flex items-center justify-center text-sm">
+                                                <i class="fa-solid fa-camera animate-pulse"></i>
+                                            </div>
+                                            <div>
+                                                <p id="file-label-name" class="text-xs font-bold text-brandCharcoal">Select or drag file...</p>
+                                                <p class="text-[9px] text-gray-400">Accepts camera snaps with geotag metadata</p>
+                                            </div>
+                                            <input type="file" id="photo-input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" onchange="handleFileSelect(event)">
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="text-[10px] font-extrabold uppercase text-gray-400 block mb-1">Coordinate Vectors (Click Map to Autofill)</label>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <div class="relative">
+                                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] text-gray-400 font-extrabold">LAT</span>
+                                                <input type="number" step="any" id="form-lat" placeholder="28.6139" class="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-3 py-2 text-xs font-semibold focus:outline-none focus:border-brandOrange" required>
+                                            </div>
+                                            <div class="relative">
+                                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] text-gray-400 font-extrabold">LON</span>
+                                                <input type="number" step="any" id="form-lon" placeholder="77.2090" class="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-3 py-2 text-xs font-semibold focus:outline-none focus:border-brandOrange" required>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="text-[10px] font-extrabold uppercase text-gray-400 block mb-1">Field Observations</label>
+                                        <textarea id="form-note" placeholder="Note any specific visual details to guide Gemini Computer Vision analysis..." class="w-full bg-white border border-gray-200 rounded-2xl p-3 text-xs font-medium focus:outline-none focus:border-brandOrange h-16 resize-none"></textarea>
+                                    </div>
+
+                                    <button type="submit" id="btn-submit" class="w-full bg-brandOrange hover:bg-orange-600 text-white font-extrabold py-3 rounded-2xl text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-microchip"></i>
+                                        <span id="btn-submit-text">Run AI Processing Pipeline</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- TAB: Cost-Based Hazard Avoidance Routing -->
+                        <div id="tab-routing" class="hidden flex-1 flex flex-col p-5 sm:p-6 gap-6 overflow-y-auto">
+                            <div class="bg-gray-50 rounded-3xl p-5 border border-gray-150">
+                                <h3 class="text-sm font-extrabold text-brandCharcoal mb-1 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-route text-brandOrange"></i> Hazard Avoidance Router
+                                </h3>
+                                <p class="text-[11px] text-gray-400 leading-normal mb-4">Calculates coordinates dynamically by routing around critical identified hazard hotspots (Simulates custom OSRM Edge re-weighting).</p>
+
+                                <div class="flex flex-col gap-3">
+                                    <div>
+                                        <label class="text-[10px] font-extrabold uppercase text-gray-400 block mb-1">Departure Origin (Start Vector)</label>
+                                        <div class="relative">
+                                            <i class="fa-solid fa-location-dot absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]"></i>
+                                            <input type="text" id="route-start" value="28.6050, 77.1950" class="bg-white border border-gray-200 rounded-xl pl-8 pr-3 py-2 text-xs font-semibold w-full focus:outline-none focus:border-brandOrange">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] font-extrabold uppercase text-gray-400 block mb-1">Destination Target (End Vector)</label>
+                                        <div class="relative">
+                                            <i class="fa-solid fa-flag-checkered absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]"></i>
+                                            <input type="text" id="route-end" value="28.6310, 77.2210" class="bg-white border border-gray-200 rounded-xl pl-8 pr-3 py-2 text-xs font-semibold w-full focus:outline-none focus:border-brandOrange">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex gap-2">
+                                        <button onclick="calculateSafeRoutes()" class="flex-1 bg-brandCharcoal hover:bg-black text-white font-extrabold py-3 rounded-2xl text-xs uppercase tracking-wider transition-all shadow-md">
+                                            <i class="fa-solid fa-shield-halved mr-1.5 text-brandOrange"></i> Detour Path
+                                        </button>
+                                        <button onclick="clearRoutes()" class="px-4 bg-gray-100 hover:bg-gray-200 text-gray-500 rounded-2xl transition-all" title="Clear plotted routes">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Route metrics parameters -->
+                            <div id="routing-comparison-results" class="hidden flex flex-col gap-3">
+                                <h4 class="text-[10px] font-extrabold text-gray-400 tracking-wider uppercase">Evaluated Route Decisions</h4>
+                                
+                                <div class="bg-white border-2 border-brandOrange rounded-2xl p-4 flex items-center justify-between premium-shadow relative overflow-hidden">
+                                    <div class="absolute -top-1 -right-1 bg-brandOrange text-white text-[8px] font-extrabold uppercase px-2 py-0.5 rounded-bl-lg">Optimal</div>
+                                    <div>
+                                        <span class="text-xs font-extrabold text-brandCharcoal block font-bold">Avoidance Path A</span>
+                                        <span class="text-[10px] text-gray-400 font-semibold block mt-1">Diverting clear of high severity hotspots</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-xs font-extrabold text-emerald-600 block">Risk: 0 Pts</span>
+                                        <span class="text-[10px] text-gray-400 font-bold block mt-0.5">8.4 KM | 14 mins</span>
+                                    </div>
+                                </div>
+
+                                <div class="bg-white border border-gray-200 rounded-2xl p-4 flex items-center justify-between">
+                                    <div>
+                                        <span class="text-xs font-extrabold text-brandCharcoal block font-bold">Shortest Path B</span>
+                                        <span class="text-[10px] text-rose-500 font-extrabold block mt-1"><i class="fa-solid fa-circle-exclamation mr-1 animate-pulse"></i>Intercepts active flood zone</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-xs font-extrabold text-rose-600 block">Risk: 12 Pts</span>
+                                        <span class="text-[10px] text-gray-400 font-bold block mt-0.5">6.1 KM | 28 mins</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB: Telemetry KPI Analytics -->
+                        <div id="tab-analytics" class="hidden flex-1 flex flex-col p-5 sm:p-6 gap-6 overflow-y-auto">
+                            <div class="bg-gray-50 rounded-3xl p-5 border border-gray-150">
+                                <h3 class="text-sm font-extrabold text-brandCharcoal mb-3">Ward defect Density Metrics</h3>
+                                <div class="flex flex-col gap-2.5">
+                                    <div class="flex justify-between items-center bg-white p-3 rounded-2xl border border-gray-200">
+                                        <div>
+                                            <span class="text-xs font-extrabold text-brandCharcoal block">Ward 12 (Central Area)</span>
+                                            <span class="text-[10px] text-gray-400 font-bold">12 Active Infrastructure Issues</span>
+                                        </div>
+                                        <span class="bg-rose-50 border border-rose-100 text-rose-600 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase">Poor</span>
+                                    </div>
+                                    <div class="flex justify-between items-center bg-white p-3 rounded-2xl border border-gray-200">
+                                        <div>
+                                            <span class="text-xs font-extrabold text-brandCharcoal block">Ward 4 (Suburban West)</span>
+                                            <span class="text-[10px] text-gray-400 font-bold">2 Active Infrastructure Issues</span>
+                                        </div>
+                                        <span class="bg-emerald-50 border border-emerald-100 text-emerald-600 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase">Optimal</span>
+                                    </div>
+                                    <div class="flex justify-between items-center bg-white p-3 rounded-2xl border border-gray-200">
+                                        <div>
+                                            <span class="text-xs font-extrabold text-brandCharcoal block">Ward 8 (Industrial Gate)</span>
+                                            <span class="text-[10px] text-gray-400 font-bold">15 Active Infrastructure Issues</span>
+                                        </div>
+                                        <span class="bg-amber-50 border border-amber-100 text-amber-600 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase">Warning</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-3xl p-4 sm:p-5 border border-gray-200">
+                                <h3 class="text-sm font-extrabold text-brandCharcoal mb-3">Incident Resolution Timelines</h3>
+                                <div class="h-44">
+                                    <canvas id="resolutionChart"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="bg-red-50 rounded-3xl p-5 border border-red-100 flex items-start gap-4">
+                                <div class="w-12 h-12 bg-white text-rose-500 rounded-2xl flex items-center justify-center text-lg shrink-0 shadow-sm border border-red-100">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                </div>
+                                <div>
+                                    <span class="text-xs font-extrabold text-red-950 block">4 Statutory Review Targets Overdue</span>
+                                    <p class="text-[10px] text-red-700 font-bold mt-1 leading-relaxed">Action deadline exceeded in Industrial District (Ward 8). Immediate attention required.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- CITIZEN HUB INTERFACES -->
+                    <div id="citizen-views-container" class="hidden flex-1 flex flex-col overflow-hidden">
+                        
+                        <!-- TAB: Citizen File Report Form -->
+                        <div id="tab-citizen-report" class="flex-1 flex flex-col overflow-y-auto p-5 sm:p-6 gap-6">
+                            <div class="bg-orange-50/50 rounded-3xl p-5 border border-brandOrange/15">
+                                <h3 class="text-sm font-extrabold text-brandCharcoal flex items-center gap-2 mb-1.5">
+                                    <i class="fa-solid fa-circle-info text-brandOrange animate-bounce"></i>
+                                    <span>Welcome to Citizen Workspace</span>
+                                </h3>
+                                <p class="text-xs text-slate-600 leading-relaxed">
+                                    Your reports are immediately processed using Gemini Vision technology to detect roadway defects, prioritize hazards, and alert emergency dispatches. Click on the map to set coordinates, upload photos, and verify active safety paths.
+                                </p>
+                            </div>
+
+                            <div class="bg-white rounded-3xl p-5 border border-gray-200">
+                                <h4 class="text-xs font-extrabold text-brandCharcoal mb-3 uppercase tracking-wider">Report Community Defect</h4>
+                                <form id="citizen-form" onsubmit="submitForm(event)" class="flex flex-col gap-4">
+                                    
+                                    <!-- Dynamic spatial coordinates -->
+                                    <div>
+                                        <label class="text-[10px] font-extrabold uppercase text-gray-400 block mb-1">Set Geolocation Coordinates (Click Map to auto-fill)</label>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <input type="number" step="any" id="cit-form-lat" placeholder="Latitude" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-brandOrange" required>
+                                            <input type="number" step="any" id="cit-form-lon" placeholder="Longitude" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-brandOrange" required>
+                                        </div>
+                                    </div>
+
+                                    <!-- Quick-inject presets for easier simulation testing -->
+                                    <div>
+                                        <label class="text-[10px] font-extrabold uppercase text-gray-400 block mb-1.5">Evidence Snapshot Presets</label>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <button type="button" onclick="injectPreset('pothole')" class="bg-gray-50 hover:bg-gray-100 border border-gray-200 text-left p-2 rounded-xl transition-all flex items-center gap-2">
+                                                <div class="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-brandOrange text-xs shrink-0"><i class="fa-solid fa-camera"></i></div>
+                                                <div>
+                                                    <p class="text-[9px] font-extrabold text-brandCharcoal uppercase">Pothole Anomaly</p>
+                                                    <p class="text-[8px] text-gray-400">Sample Template</p>
+                                                </div>
+                                            </button>
+                                            <button type="button" onclick="injectPreset('flooding')" class="bg-gray-50 hover:bg-gray-100 border border-gray-200 text-left p-2 rounded-xl transition-all flex items-center gap-2">
+                                                <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-500 text-xs shrink-0"><i class="fa-solid fa-droplet"></i></div>
+                                                <div>
+                                                    <p class="text-[9px] font-extrabold text-brandCharcoal uppercase">Drainage Flooding</p>
+                                                    <p class="text-[8px] text-gray-400">Sample Template</p>
+                                                </div>
+                                            </button>
+                                        </div>
+
+                                        <div class="mt-3 bg-slate-50 border border-dashed border-slate-300 rounded-2xl p-4 flex flex-col items-center justify-center cursor-pointer relative hover:border-brandOrange transition-all">
+                                            <input type="file" id="citizen-photo" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" onchange="handleFileSelect(event)">
+                                            <i class="fa-solid fa-cloud-arrow-up text-slate-400 text-xl mb-1.5"></i>
+                                            <span id="cit-file-label" class="text-xs font-bold text-slate-600">Upload your phone snapshot</span>
+                                            <span class="text-[9px] text-slate-400 mt-0.5">Supports high precision camera metadata</span>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="text-[10px] font-extrabold uppercase text-gray-400 block mb-1">What did you observe? (Field notes)</label>
+                                        <textarea id="cit-form-note" placeholder="E.g. Asphalt cave-in, deep puddle blocks pedestrian lane, light offline..." class="w-full bg-gray-50 border border-gray-200 rounded-2xl p-3 text-xs font-medium focus:outline-none focus:border-brandOrange h-20 resize-none"></textarea>
+                                    </div>
+
+                                    <button type="submit" id="cit-btn-submit" class="w-full bg-brandOrange hover:bg-orange-600 text-white font-extrabold py-3.5 rounded-2xl text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-bolt animate-pulse"></i>
+                                        <span id="cit-btn-submit-text">Submit Urgent Report</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- TAB: Citizen Track My Submissions -->
+                        <div id="tab-citizen-my-reports" class="hidden flex-1 flex flex-col overflow-y-auto p-5 sm:p-6 gap-6">
+                            <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+                                <h3 class="text-sm font-extrabold text-brandCharcoal">My Active Submissions</h3>
+                                <span class="text-[10px] bg-brandGreyBg px-2 py-0.5 rounded-full text-gray-500 font-extrabold uppercase" id="cit-report-count">0 items</span>
+                            </div>
+                            <div class="flex flex-col gap-3" id="citizen-submissions-list">
+                                <!-- Populated dynamically from filtered local database items -->
+                            </div>
+                        </div>
+
+                        <!-- TAB: Citizen Commute Safe Routing -->
+                        <div id="tab-citizen-safe-routing" class="hidden flex-1 flex flex-col overflow-y-auto p-5 sm:p-6 gap-6">
+                            <div class="bg-gray-50 rounded-3xl p-5 border border-gray-150">
+                                <h3 class="text-sm font-extrabold text-brandCharcoal mb-1 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-shield-halved text-brandOrange"></i> Daily Commute Safety
+                                </h3>
+                                <p class="text-[11px] text-gray-400 leading-normal mb-4">Protect your vehicle. Avoid structural potholes, active storm runoff zones, or offline intersections along your travel routes.</p>
+
+                                <div class="flex flex-col gap-3">
+                                    <div>
+                                        <label class="text-[10px] font-extrabold uppercase text-gray-400 block mb-1">Departure Point Coordinates</label>
+                                        <input type="text" id="cit-route-start" value="28.6050, 77.1950" class="bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold w-full focus:outline-none focus:border-brandOrange">
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] font-extrabold uppercase text-gray-400 block mb-1">Destination Target Coordinates</label>
+                                        <input type="text" id="cit-route-end" value="28.6310, 77.2210" class="bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold w-full focus:outline-none focus:border-brandOrange">
+                                    </div>
+                                    
+                                    <button onclick="calculateSafeRoutes()" class="w-full bg-brandCharcoal hover:bg-black text-white font-extrabold py-3.5 rounded-2xl text-xs uppercase tracking-wider transition-all shadow-md">
+                                        <i class="fa-solid fa-map-location-dot mr-1.5 text-brandOrange"></i> Calculate Safe Commute
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="cit-routing-comparison" class="hidden flex flex-col gap-3">
+                                <h4 class="text-[10px] font-extrabold text-gray-400 tracking-wider uppercase">Hazard Avoidance Path Analysis</h4>
+                                <div class="bg-white border-2 border-brandOrange rounded-2xl p-4 flex items-center justify-between premium-shadow relative overflow-hidden">
+                                    <div class="absolute -top-1 -right-1 bg-brandOrange text-white text-[8px] font-extrabold uppercase px-2 py-0.5 rounded-bl-lg">Recommended</div>
+                                    <div>
+                                        <span class="text-xs font-extrabold text-brandCharcoal block font-bold">Route Alpha Detour</span>
+                                        <span class="text-[10px] text-gray-400 font-semibold block mt-1">100% bypass of high-severity pothole cave-ins.</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-xs font-extrabold text-emerald-600 block">0 Hazards</span>
+                                        <span class="text-[10px] text-gray-400 font-semibold block mt-0.5">14 Mins</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- SIMULATED EMERGENCY TELEPHONY AND VoIP OUTFLOWS -->
+                    <div class="border-t border-gray-100 p-5 sm:p-6 bg-slate-50 shrink-0">
+                        <div class="flex items-center justify-between mb-2">
+                            <span id="twilio-label" class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Emergency Dispatch Console (Twilio VoIP)</span>
+                            <span class="flex items-center gap-1">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                                <span class="text-[9px] text-emerald-600 font-extrabold uppercase tracking-wide">Connected Live</span>
+                            </span>
+                        </div>
+                        <div id="twilio-voice-log" class="bg-brandCharcoal text-slate-300 font-mono text-[10px] p-3 rounded-2xl h-24 overflow-y-auto flex flex-col gap-1.5 shadow-inner border border-slate-800">
+                            <div class="text-emerald-400">[SYSTEM] Twilio Voice dispatch protocol online.</div>
+                            <div class="text-slate-400">[IDLE] Scanning live environment feeds for high-confidence anomalies.</div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- HIDDEN CANVAS FOR INSTAGRAM/SOCIAL SHARE GENERATOR -->
+    <div id="share-card-modal" class="hidden fixed inset-0 z-[6000] flex items-center justify-center bg-black/75 p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 flex flex-col gap-4 relative">
+            <button onclick="closeShareModal()" class="absolute top-4 right-4 text-gray-400 hover:text-brandCharcoal"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <h3 class="text-sm font-extrabold text-brandCharcoal uppercase tracking-wider mb-1"><i class="fa-brands fa-instagram text-brandOrange"></i> Export Civic Share Card</h3>
+            <p class="text-[10px] text-gray-400 leading-normal">Creates a secure, watermarked graphic featuring Gemini AI analysis to post onto social channels.</p>
+            
+            <div class="border border-gray-200 rounded-2xl overflow-hidden shadow-sm flex items-center justify-center bg-gray-100">
+                <canvas id="instagram-canvas" width="400" height="400" class="max-w-full h-auto rounded-2xl border border-gray-200"></canvas>
+            </div>
+            
+            <button onclick="downloadShareCard()" class="w-full bg-brandOrange hover:bg-orange-600 text-white font-extrabold py-3 rounded-2xl text-xs uppercase tracking-wider shadow-md flex items-center justify-center gap-2">
+                <i class="fa-solid fa-download"></i> Download Export Graphic
+            </button>
+        </div>
+    </div>
+
+    <!-- CODE SCRIPT LOGIC SECTION -->
+    <script>
+        // Pre-seeded database items for high realism and validation scenarios
+        const incidentPresets = {
+            pothole: {
+                id: "INC-101",
+                incident_type: "pothole",
+                severity: "high",
+                confidence_score: 0.82,
+                status: "verified",
+                lat: 28.6250,
+                lon: 77.2100,
+                description_user: "Severe asphalt cave-in on central left-lane. Risk of structural suspension damage to passing light vehicles.",
+                ai_reasoning: "Optical scanning detects asphalt loss fitting high-risk pothole profile. High consensus rating recorded.",
+                ai_summary: "Major structural pothole located on Ward 12 Main St Boulevard, provoking aggressive weaving behaviors.",
+                department: "Municipal Road Department",
+                image_path: "https://placehold.co/600x400/ffe4e6/991b1b?text=Pothole+Cave-In",
+                confirmations: 2,
+                filed_by: "citizen",
+                gps_accuracy_m: 12.5,
+                reporter_trust: 85
+            },
+            flooding: {
+                id: "INC-102",
+                incident_type: "flooding",
+                severity: "critical",
+                confidence_score: 0.94,
+                status: "verified",
+                lat: 28.6180,
+                lon: 77.2000,
+                description_user: "Heavy runoff from recent rainstorm has overwhelmed local drainage outlets. Depth around 12 inches.",
+                ai_reasoning: "Reflective puddle indices match high flooding probability. Secondary drainage backlog warning issued.",
+                ai_summary: "Severe water intrusion at Intersection 14, rendering lane pathways impassable to standard commuters.",
+                department: "Drainage Department",
+                image_path: "https://placehold.co/600x400/e0f2fe/075985?text=Major+Road+Flooding",
+                confirmations: 3,
+                filed_by: "system",
+                gps_accuracy_m: 18.2,
+                reporter_trust: 90
+            },
+            broken_signal: {
+                id: "INC-103",
+                incident_type: "broken_signal",
+                severity: "medium",
+                confidence_score: 0.64,
+                status: "pending_review",
+                lat: 28.6310,
+                lon: 77.2210,
+                description_user: "Eastbound intersection traffic light indicators completely offline.",
+                ai_reasoning: "Zero state pixel light signals verified over 180s cycle. Manual patrol recommended.",
+                ai_summary: "Inoperable traffic signal on industrial road intersection. Requires urgent physical traffic warden deployment.",
+                department: "Traffic Department",
+                image_path: "https://placehold.co/600x400/fef3c7/92400e?text=Broken+Traffic+Light",
+                confirmations: 1,
+                filed_by: "system",
+                gps_accuracy_m: 35.0,
+                reporter_trust: 60
+            },
+            accident: {
+                id: "INC-104",
+                incident_type: "accident",
+                severity: "critical",
+                confidence_score: 0.98,
+                status: "verified",
+                lat: 28.6050,
+                lon: 77.1950,
+                description_user: "Three-car collision near main highway toll booth. Commuter assistance is actively required.",
+                ai_reasoning: "Physical vehicle structure deformity detected. Integrated GPS feeds indicate significant delays in adjacent cells.",
+                ai_summary: "Multi-vehicle roadway crash on Highway Route 5 corridor. Cumulative delays exceeding 40 minutes.",
+                department: "Traffic Police",
+                image_path: "https://placehold.co/600x400/f3e8ff/6b21a8?text=Vehicle+Collision",
+                confirmations: 5,
+                filed_by: "system",
+                gps_accuracy_m: 5.0,
+                reporter_trust: 95
+            }
+        };
+
+        // Current runtime application state database
+        let databaseIncidents = [
+            { ...incidentPresets.pothole },
+            { ...incidentPresets.flooding },
+            { ...incidentPresets.broken_signal },
+            { ...incidentPresets.accident }
+        ];
+
+        let currentUser = {
+            role: null, // 'citizen' or 'operator'
+            id: null,   // username
+            ward: null, // citizen's active ward
+            trust_score: 50 // starting hackathon base trust
+        };
+
+        let mapInstance = null;
+        let markersGroup = null;
+        let heatmapGroup = null;
+        let activeLayerMode = 'markers'; // 'markers' or 'heat'
+        let routeMarkers = [];
+        let routeLine = null;
+        let chartInstance = null;
+        let navigationSidebarCollapsed = false;
+        let sidebarPanelCollapsed = false;
+
+        // UNIFIED AUTHENTICATION AND ROLE SELECTION CONTROLLER
+        function fillAndLogin(username, password) {
+            document.getElementById('login-username').value = username;
+            document.getElementById('login-password').value = password;
+            
+            // Auto submit form directly
+            const mockEvent = { preventDefault: () => {} };
+            handleUnifiedLogin(mockEvent);
+        }
+
+        function handleUnifiedLogin(event) {
+            event.preventDefault();
+            const usernameInput = document.getElementById('login-username').value.trim();
+            const passwordInput = document.getElementById('login-password').value.trim();
+
+            if (!usernameInput || !passwordInput) {
+                return showToast("Please fill both Username and Password fields.");
+            }
+
+            // Route user depending on credentials (Simplified single gateway flow)
+            if (usernameInput.toLowerCase() === 'admin' && passwordInput === 'pulse2026') {
+                // Initialize Operator Command Hub
+                currentUser.role = 'operator';
+                currentUser.id = "Admin Operator (Warden-04)";
+                currentUser.ward = "Central Command";
+                currentUser.trust_score = 100; // Perfect system administrative trust
+
+                document.getElementById('header-platform-label').textContent = "RoadPulse AI platform";
+                document.getElementById('header-workspace-label').textContent = "Overview Console";
+                document.getElementById('workspace-badge').textContent = "2026 Command v4.5";
+                document.getElementById('avatar-user').src = "https://placehold.co/100x100/1d1f23/ffffff?text=OP";
+                document.getElementById('user-trust-badge').textContent = currentUser.trust_score;
+
+                document.getElementById('nav-citizen-group').classList.add('hidden');
+                document.getElementById('nav-operator-group').classList.remove('hidden');
+
+                document.getElementById('citizen-views-container').classList.add('hidden');
+                document.getElementById('operator-views-container').classList.remove('hidden');
+
+                setupMobileNavigationBar('operator');
+
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('app-shell').classList.remove('hidden');
+
+                switchTab('dashboard');
+                initializeGISMapSandbox();
+                initResolutionTimelineChart();
+                showToast("Command Console Auth Verified.");
+
+            } else if (usernameInput.toLowerCase() === 'citizen' && passwordInput === 'user2026') {
+                // Initialize Citizen / Customer Portal
+                currentUser.role = 'citizen';
+                currentUser.id = "citizen";
+                currentUser.ward = "Ward 12 (Central Civic)";
+                currentUser.trust_score = 75; // Pre-validated civilian user trust
+
+                // Configure header display values
+                document.getElementById('header-platform-label').textContent = "Citizen Portal (Ward 12)";
+                document.getElementById('header-workspace-label').textContent = "Community Feedback & Dispatch Workspace";
+                document.getElementById('workspace-badge').textContent = "Citizen Token Approved";
+                document.getElementById('avatar-user').src = "https://placehold.co/100x100/ff7a22/ffffff?text=CI";
+                document.getElementById('user-trust-badge').textContent = currentUser.trust_score;
+
+                // Configure sidebar element filters
+                document.getElementById('nav-citizen-group').classList.remove('hidden');
+                document.getElementById('nav-operator-group').classList.add('hidden');
+
+                document.getElementById('citizen-views-container').classList.remove('hidden');
+                document.getElementById('operator-views-container').classList.add('hidden');
+
+                // Set mobile responsive controls
+                setupMobileNavigationBar('citizen');
+                
+                // Show App Interface
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('app-shell').classList.remove('hidden');
+
+                // Initial Tab Switch
+                switchTab('citizen-report');
+                initializeGISMapSandbox();
+                showToast("Citizen reporting node online.");
+
+            } else {
+                // Fallback / Validation Warning
+                showToast("Access Denied: Invalid credentials! Check demo credentials below.");
+            }
+        }
+
+        function setupMobileNavigationBar(role) {
+            const container = document.getElementById('mobile-navigation-bar');
+            container.innerHTML = '';
+
+            if (role === 'citizen') {
+                container.innerHTML = `
+                    <button onclick="switchTab('citizen-report')" id="mob-nav-citizen-report" class="flex-1 py-2 text-xs font-bold text-center rounded-lg text-gray-500 hover:bg-gray-50 transition-all">Submit</button>
+                    <button onclick="switchTab('citizen-my-reports')" id="mob-nav-citizen-my-reports" class="flex-1 py-2 text-xs font-bold text-center rounded-lg text-gray-500 hover:bg-gray-50 transition-all">My Tracks</button>
+                    <button onclick="switchTab('citizen-safe-routing')" id="mob-nav-citizen-safe-routing" class="flex-1 py-2 text-xs font-bold text-center rounded-lg text-gray-500 hover:bg-gray-50 transition-all">Safe Path</button>
+                `;
+            } else {
+                container.innerHTML = `
+                    <button onclick="switchTab('dashboard')" id="mob-nav-dashboard" class="flex-1 py-2 text-xs font-bold text-center rounded-lg text-gray-500 hover:bg-gray-50 transition-all">Overview</button>
+                    <button onclick="switchTab('reports')" id="mob-nav-reports" class="flex-1 py-2 text-xs font-bold text-center rounded-lg text-gray-500 hover:bg-gray-50 transition-all">Dispatch</button>
+                    <button onclick="switchTab('routing')" id="mob-nav-routing" class="flex-1 py-2 text-xs font-bold text-center rounded-lg text-gray-500 hover:bg-gray-50 transition-all">Routing</button>
+                    <button onclick="switchTab('analytics')" id="mob-nav-analytics" class="flex-1 py-2 text-xs font-bold text-center rounded-lg text-gray-500 hover:bg-gray-50 transition-all">Metrics</button>
+                `;
+            }
+        }
+
+        function logOut() {
+            currentUser.role = null;
+            currentUser.id = null;
+            currentUser.ward = null;
+            currentUser.trust_score = 50;
+
+            // Clear credentials values
+            document.getElementById('login-username').value = '';
+            document.getElementById('login-password').value = '';
+
+            document.getElementById('app-shell').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+            showToast("Workspace session locked.");
+        }
+
+        // Dynamic map loader
+        function initializeGISMapSandbox() {
+            if (mapInstance !== null) {
+                setTimeout(() => {
+                    mapInstance.invalidateSize();
+                }, 100);
+                return;
+            }
+
+            if (typeof L !== 'undefined') {
+                try {
+                    // Centralize on New Delhi area coordinates for demonstration realism
+                    mapInstance = L.map('map', {
+                        zoomControl: false,
+                        scrollWheelZoom: true
+                    }).setView([28.6180, 77.2090], 13);
+
+                    // Tile mapping matching dark/neutral minimal modern aesthetic
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                        attribution: '&copy; OpenStreetMap &copy; CARTO',
+                        subdomains: 'abcd',
+                        maxZoom: 20
+                    }).addTo(mapInstance);
+
+                    markersGroup = L.layerGroup().addTo(mapInstance);
+                    heatmapGroup = L.layerGroup().addTo(mapInstance);
+
+                    // Bind dynamic map clicks to latitude and longitude fields
+                    mapInstance.on('click', function(e) {
+                        const targetLat = e.latlng.lat.toFixed(6);
+                        const targetLon = e.latlng.lng.toFixed(6);
+
+                        if (currentUser.role === 'citizen') {
+                            document.getElementById('cit-form-lat').value = targetLat;
+                            document.getElementById('cit-form-lon').value = targetLon;
+                        } else {
+                            document.getElementById('form-lat').value = targetLat;
+                            document.getElementById('form-lon').value = targetLon;
+                        }
+                        showToast("Geographic coordinate captured from map selection.");
+                    });
+
+                    setTimeout(() => {
+                        mapInstance.invalidateSize();
+                        syncDataAndUI();
+                    }, 150);
+
+                } catch (mapErr) {
+                    console.error("GIS platform loading error: ", mapErr);
+                    showToast("Map sandbox initiated. Real-time overlays offline.");
+                }
+            } else {
+                showToast("Mapping resources unreachable. Check connectivity.");
+            }
+        }
+
+        // Expand/Collapse the navigation left sidebar capsule
+        function toggleNavigationSidebar() {
+            const navSidebar = document.getElementById('main-navigation-sidebar');
+            const icon = document.getElementById('nav-collapse-icon');
+            const labels = document.querySelectorAll('.sidebar-label');
+
+            if (navigationSidebarCollapsed) {
+                // Expand
+                navSidebar.classList.replace('w-16', 'w-20');
+                labels.forEach(lbl => lbl.classList.add('hidden'));
+                icon.className = "fa-solid fa-angles-left text-[10px]";
+                navigationSidebarCollapsed = false;
+            } else {
+                // Collapse further
+                navSidebar.classList.replace('w-20', 'w-16');
+                labels.forEach(lbl => lbl.classList.add('hidden'));
+                icon.className = "fa-solid fa-angles-right text-[10px]";
+                navigationSidebarCollapsed = true;
+            }
+            setTimeout(() => {
+                if (mapInstance) mapInstance.invalidateSize();
+            }, 300);
+        }
+
+        // Collapse/Expand the right-hand panel sidebar containing fields and telemetry
+        function toggleSidebarPanel() {
+            const panel = document.getElementById('sidebar-panel');
+            const icon = document.getElementById('sidebar-toggle-icon');
+            
+            if (sidebarPanelCollapsed) {
+                // Expand
+                panel.classList.replace('lg:w-0', 'lg:w-[450px]');
+                panel.classList.remove('opacity-0', 'pointer-events-none');
+                icon.className = "fa-solid fa-chevron-right text-xs";
+                sidebarPanelCollapsed = false;
+            } else {
+                // Collapse
+                panel.classList.replace('lg:w-[450px]', 'lg:w-0');
+                panel.classList.add('opacity-0', 'pointer-events-none');
+                icon.className = "fa-solid fa-chevron-left text-xs";
+                sidebarPanelCollapsed = true;
+            }
+            setTimeout(() => {
+                if (mapInstance) mapInstance.invalidateSize();
+            }, 310);
+        }
+
+        function switchTab(tabId) {
+            // Hide all tab screens
+            const panels = [
+                'tab-dashboard', 'tab-reports', 'tab-routing', 'tab-analytics',
+                'tab-citizen-report', 'tab-citizen-my-reports', 'tab-citizen-safe-routing'
+            ];
+            panels.forEach(p => {
+                const el = document.getElementById(p);
+                if (el) el.classList.add('hidden');
+            });
+
+            // Deactivate all Left Sidebar Nav highlights
+            const navs = [
+                'nav-dashboard', 'nav-reports', 'nav-routing', 'nav-analytics',
+                'nav-citizen-report', 'nav-citizen-my-reports', 'nav-citizen-safe-routing'
+            ];
+            navs.forEach(n => {
+                const btn = document.getElementById(n);
+                if (btn) btn.className = "w-full h-12 flex items-center justify-center text-gray-400 hover:text-brandCharcoal hover:bg-gray-100 rounded-2xl transition-all duration-300";
+            });
+
+            // Deactivate mobile nav buttons
+            const mobBtns = [
+                'mob-nav-dashboard', 'mob-nav-reports', 'mob-nav-routing', 'mob-nav-analytics',
+                'mob-nav-citizen-report', 'mob-nav-citizen-my-reports', 'mob-nav-citizen-safe-routing'
+            ];
+            mobBtns.forEach(mbId => {
+                const btn = document.getElementById(mbId);
+                if (btn) btn.className = "flex-1 py-2 text-xs font-bold text-center rounded-lg text-gray-500 hover:bg-gray-50 transition-all";
+            });
+
+            // Activate Tab visually
+            const targetPanel = document.getElementById('tab-' + tabId);
+            if (targetPanel) targetPanel.classList.remove('hidden');
+
+            const targetNav = document.getElementById('nav-' + tabId);
+            if (targetNav) {
+                targetNav.className = "w-full h-12 flex items-center justify-center rounded-2xl transition-all duration-300 active-nav-item";
+            }
+
+            const targetMob = document.getElementById('mob-nav-' + tabId);
+            if (targetMob) {
+                targetMob.className = "flex-1 py-2 text-xs font-bold text-center rounded-lg bg-brandOrange text-white transition-all";
+            }
+
+            // Sync breadcrumbs
+            const labels = {
+                'dashboard': 'Overview Dashboard',
+                'reports': 'Manual Dispatches',
+                'routing': 'Avoidance Routing',
+                'analytics': 'Ward Metrics Tracker',
+                'citizen-report': 'Anomaly Submission Form',
+                'citizen-my-reports': 'My Filed Reports',
+                'citizen-safe-routing': 'Commuter Safety Path'
+            };
+            document.getElementById('breadcrumb-current').textContent = labels[tabId] || 'Workspace';
+
+            if (mapInstance) {
+                setTimeout(() => { mapInstance.invalidateSize(); }, 150);
+            }
+        }
+
+        function injectPreset(type) {
+            const data = incidentPresets[type];
+            if (!data) return;
+
+            if (currentUser.role === 'citizen') {
+                document.getElementById('cit-form-lat').value = data.lat;
+                document.getElementById('cit-form-lon').value = data.lon;
+                document.getElementById('cit-form-note').value = data.description_user;
+                document.getElementById('cit-file-label').textContent = `${type.toUpperCase()}_Evidence.jpg`;
+            } else {
+                document.getElementById('form-lat').value = data.lat;
+                document.getElementById('form-lon').value = data.lon;
+                document.getElementById('form-note').value = data.description_user;
+                document.getElementById('file-label-name').textContent = `${type.toUpperCase()}_Evidence.jpg`;
+            }
+            showToast(`Preset parameters matching ${type} seeded.`);
+        }
+
+        function handleFileSelect(e) {
+            if (e.target.files.length > 0) {
+                const labelName = e.target.files[0].name;
+                if (currentUser.role === 'citizen') {
+                    document.getElementById('cit-file-label').textContent = labelName;
+                } else {
+                    document.getElementById('file-label-name').textContent = labelName;
+                }
+                showToast("Physical photo linked successfully.");
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast-notif');
+            const label = document.getElementById('toast-message');
+            label.textContent = message;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 4000);
+        }
+
+        // Distance formula logic
+        function haversineDistanceMeters(lat1, lon1, lat2, lon2) {
+            const R = 6371e3; // Earth radius in meters
+            const phi1 = lat1 * Math.PI/180;
+            const phi2 = lat2 * Math.PI/180;
+            const dphi = (lat2-lat1) * Math.PI/180;
+            const dlambda = (lon2-lon1) * Math.PI/180;
+
+            const a = Math.sin(dphi/2) * Math.sin(dphi/2) +
+                    Math.cos(phi1) * Math.cos(phi2) *
+                    Math.sin(dlambda/2) * Math.sin(dlambda/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+            return R * c;
+        }
+
+        // Transparent scoring system exact report implementation (§4.3)
+        // Formula: 50% gemini_confidence + 25% confirmations + 15% gps_quality + 10% reporter_trust
+        function computeConfidenceScore(geminiConfidence, confirmations, gpsAccuracyM, reporterTrust) {
+            const gpsQuality = gpsAccuracyM <= 20 ? 1.0 : (gpsAccuracyM <= 50 ? 0.6 : 0.3);
+            const confirmationBoost = Math.min(1.0, confirmations / 3);
+            const trustFactor = Math.min(1.0, reporterTrust / 100);
+
+            const mlComponent = 0.50 * geminiConfidence;
+            const votesComponent = 0.25 * confirmationBoost;
+            const gpsComponent = 0.15 * gpsQuality;
+            const trustComponent = 0.10 * trustFactor;
+
+            const finalScore = mlComponent + votesComponent + gpsComponent + trustComponent;
+            return {
+                total: parseFloat(Math.min(finalScore, 1.0).toFixed(3)),
+                ml: parseFloat(mlComponent.toFixed(3)),
+                votes: parseFloat(votesComponent.toFixed(3)),
+                gps: parseFloat(gpsComponent.toFixed(3)),
+                trust: parseFloat(trustComponent.toFixed(3))
+            };
+        }
+
+        // Form processing workflow
+        function submitForm(event) {
+            event.preventDefault();
+
+            let lat, lon, note;
+            const isCitizen = (currentUser.role === 'citizen');
+
+            if (isCitizen) {
+                lat = parseFloat(document.getElementById('cit-form-lat').value);
+                lon = parseFloat(document.getElementById('cit-form-lon').value);
+                note = document.getElementById('cit-form-note').value;
+            } else {
+                lat = parseFloat(document.getElementById('form-lat').value);
+                lon = parseFloat(document.getElementById('form-lon').value);
+                note = document.getElementById('form-note').value;
+            }
+
+            if (isNaN(lat) || isNaN(lon)) {
+                return showToast("Provide correctly structured geographic coordinates.");
+            }
+
+            // Anomaly classification keywords map (§4.4)
+            let detectedType = "pothole";
+            let severity = "medium";
+            let dept = "Municipal Road Department";
+
+            const lowNote = note.toLowerCase();
+            if (lowNote.includes('flood') || lowNote.includes('water') || lowNote.includes('drain')) {
+                detectedType = "flooding";
+                severity = "critical";
+                dept = "Drainage Department";
+            } else if (lowNote.includes('signal') || lowNote.includes('traffic light') || lowNote.includes('power')) {
+                detectedType = "broken_signal";
+                severity = "medium";
+                dept = "Traffic Department";
+            } else if (lowNote.includes('accident') || lowNote.includes('crash') || lowNote.includes('collision')) {
+                detectedType = "accident";
+                severity = "critical";
+                dept = "Traffic Police";
+            }
+
+            // DUPLICATE SPATIAL DETECTOR CHECK (Exact §4.2 Report Limit Radius = 50 meters)
+            let duplicateFound = null;
+            for (let i = 0; i < databaseIncidents.length; i++) {
+                const existing = databaseIncidents[i];
+                if (existing.incident_type === detectedType) {
+                    const dist = haversineDistanceMeters(lat, lon, existing.lat, existing.lon);
+                    if (dist <= 50) {
+                        duplicateFound = existing;
+                        break;
+                    }
+                }
+            }
+
+            // UI submission button anim state
+            const targetBtnId = isCitizen ? 'cit-btn-submit' : 'btn-submit';
+            const targetTxtId = isCitizen ? 'cit-btn-submit-text' : 'btn-submit-text';
+            const submitBtn = document.getElementById(targetBtnId);
+            const submitTxt = document.getElementById(targetTxtId);
+
+            submitBtn.disabled = true;
+            submitTxt.innerHTML = "Processing Gemini Vision Pipeline <i class='fa-solid fa-spinner animate-spin ml-1.5'></i>";
+
+            setTimeout(() => {
+                submitBtn.disabled = false;
+                submitTxt.textContent = isCitizen ? "Submit Urgent Report" : "Run AI Processing Pipeline";
+
+                if (duplicateFound) {
+                    duplicateFound.confirmations++;
+                    
+                    // Recalculate transparent score with new confirmation boost
+                    const scoreObj = computeConfidenceScore(
+                        duplicateFound.gemini_core_confidence || 0.85, 
+                        duplicateFound.confirmations, 
+                        duplicateFound.gps_accuracy_m || 15.0, 
+                        duplicateFound.reporter_trust || 75
+                    );
+                    duplicateFound.confidence_score = scoreObj.total;
+                    
+                    showToast("Spatial Overlap (Within 50m limit): Dynamic data cluster merged.");
+                    syncDataAndUI();
+                    inspectIncident(duplicateFound.id);
+                    if (isCitizen) {
+                        switchTab('citizen-my-reports');
+                    } else {
+                        switchTab('dashboard');
+                    }
+                    return;
+                }
+
+                // Add to database
+                const newId = "INC-" + (100 + databaseIncidents.length + 1);
+                
+                // Simulate standard Gemini Vision confidence core
+                const simulatedGeminiConf = 0.82; 
+                const simulatedGpsAccuracy = 15.0; // Simulated mobile cell accuracy in meters
+                
+                // Calculate formula score
+                const scoreObj = computeConfidenceScore(
+                    simulatedGeminiConf, 
+                    1, 
+                    simulatedGpsAccuracy, 
+                    currentUser.trust_score
+                );
+
+                const newIncident = {
+                    id: newId,
+                    incident_type: detectedType,
+                    severity: severity,
+                    confidence_score: scoreObj.total,
+                    gemini_core_confidence: simulatedGeminiConf,
+                    status: "verified",
+                    lat: lat,
+                    lon: lon,
+                    description_user: note || "Field report submitted with telemetry parameters.",
+                    ai_reasoning: `Visual checks align with normal patterns for ${detectedType.replace('_', ' ')}. Automated priority dispatch activated.`,
+                    ai_summary: `Newly registered ${detectedType.replace('_', ' ')} verified near coordinate sector.`,
+                    department: dept,
+                    image_path: `https://placehold.co/600x400/ffe4e6/991b1b?text=${detectedType.toUpperCase()}`,
+                    confirmations: 1,
+                    filed_by: isCitizen ? currentUser.id : 'system',
+                    gps_accuracy_m: simulatedGpsAccuracy,
+                    reporter_trust: currentUser.trust_score
+                };
+
+                databaseIncidents.push(newIncident);
+                showToast("Telemetry successfully classified by Gemini Vision AI.");
+                
+                syncDataAndUI();
+                inspectIncident(newId);
+
+                // Increment citizen trust on successful verification report submission
+                if (isCitizen) {
+                    currentUser.trust_score = Math.min(100, currentUser.trust_score + 5);
+                    document.getElementById('user-trust-badge').textContent = currentUser.trust_score;
+                }
+
+                if (isCitizen) {
+                    switchTab('citizen-my-reports');
+                } else {
+                    switchTab('dashboard');
+                }
+
+                // Twilio escalation trigger check
+                if (severity === "critical" && scoreObj.total >= 0.55) {
+                    triggerSimulatedTwilioCall(newIncident);
+                }
+
+            }, 1800);
+        }
+
+        // Simulated emergency telephone dial action
+        function triggerSimulatedTwilioCall(incident) {
+            const twilioLog = document.getElementById('twilio-voice-log');
+            twilioLog.innerHTML += `<div class="text-brandOrange font-bold">[CALLING] Alert dispatch queued to ${incident.department}...</div>`;
+            twilioLog.scrollTop = twilioLog.scrollHeight;
+
+            // Increment widget counter dynamically
+            const callWidget = document.getElementById('widget-dispatches');
+            if (callWidget) {
+                callWidget.textContent = parseInt(callWidget.textContent) + 1;
+            }
+
+            setTimeout(() => {
+                twilioLog.innerHTML += `<div class="text-emerald-400">[CONNECTED] Auto-assistant streaming dispatch voice payload...</div>`;
+                twilioLog.innerHTML += `<div class="text-slate-300">"Urgent alert: Confirmed ${incident.incident_type.replace('_',' ')} detected at [${incident.lat.toFixed(4)}, ${incident.lon.toFixed(4)}]. Conf: ${(incident.confidence_score*100).toFixed(0)}%"</div>`;
+                twilioLog.scrollTop = twilioLog.scrollHeight;
+            }, 2500);
+        }
+
+        function filterLiveLog() {
+            const query = document.getElementById('global-search').value.toLowerCase();
+            const cards = document.querySelectorAll('#log-feed-container > div, #citizen-submissions-list > div');
+            cards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                if (text.includes(query)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function syncDataAndUI() {
+            if (!mapInstance) return;
+
+            // Clear old layers
+            markersGroup.clearLayers();
+            heatmapGroup.clearLayers();
+
+            const heatCoords = [];
+            const colorsMap = {
+                low: "#10b981",
+                medium: "#f59e0b",
+                high: "#ff7a22",
+                critical: "#ef4444"
+            };
+
+            databaseIncidents.forEach(inc => {
+                const color = colorsMap[inc.severity] || "#64748b";
+
+                const marker = L.circleMarker([inc.lat, inc.lon], {
+                    radius: inc.severity === 'critical' ? 12 : 9,
+                    color: color,
+                    fillColor: color,
+                    fillOpacity: 0.85,
+                    weight: 2
+                });
+
+                marker.bindPopup(`
+                    <div class="p-1 font-sans" style="width: 170px;">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-extrabold uppercase text-[10px] text-brandCharcoal">${inc.incident_type.replace('_',' ')}</span>
+                            <span class="text-[8px] border px-2 py-0.5 rounded-full font-bold uppercase" style="color: ${color}; border-color: ${color}50; background-color: ${color}10">${inc.severity}</span>
+                        </div>
+                        <img src="${inc.image_path}" class="w-full h-20 object-cover rounded-lg mb-2 border border-gray-150">
+                        <button onclick="inspectIncident('${inc.id}')" class="w-full bg-brandCharcoal hover:bg-black text-white font-bold py-1 rounded-lg text-[9px] uppercase transition-all shadow-sm">Inspect</button>
+                    </div>
+                `);
+
+                markersGroup.addLayer(marker);
+
+                const intensity = { low: 0.3, medium: 0.5, high: 0.8, critical: 1.0 }[inc.severity] || 0.5;
+                heatCoords.push([inc.lat, inc.lon, intensity]);
+            });
+
+            // Re-render heatmap layer if coordinates are loaded
+            if (heatCoords.length > 0 && typeof L.heatLayer === 'function') {
+                try {
+                    const heatLayer = L.heatLayer(heatCoords, { radius: 25, blur: 15 });
+                    heatmapGroup.addLayer(heatLayer);
+                } catch(e) {
+                    console.warn("Heat layering skipped safely during rendering.");
+                }
+            }
+
+            updateMapLayerVisibility();
+
+            // Populate Operator & Citizen Triage Lists
+            renderTriageFeeds();
+        }
+
+        function updateMapLayerVisibility() {
+            if (activeLayerMode === 'markers') {
+                mapInstance.addLayer(markersGroup);
+                mapInstance.removeLayer(heatmapGroup);
+                document.getElementById('layer-btn-markers').className = "px-3 py-1.5 rounded-xl text-xs font-bold transition-all bg-brandOrange text-white shadow-sm flex items-center gap-1.5";
+                document.getElementById('layer-btn-heat').className = "px-3 py-1.5 rounded-xl text-xs font-bold transition-all text-gray-600 hover:bg-gray-100 flex items-center gap-1.5";
+            } else {
+                mapInstance.addLayer(heatmapGroup);
+                mapInstance.removeLayer(markersGroup);
+                document.getElementById('layer-btn-heat').className = "px-3 py-1.5 rounded-xl text-xs font-bold transition-all bg-brandOrange text-white shadow-sm flex items-center gap-1.5";
+                document.getElementById('layer-btn-markers').className = "px-3 py-1.5 rounded-xl text-xs font-bold transition-all text-gray-600 hover:bg-gray-100 flex items-center gap-1.5";
+            }
+        }
+
+        function toggleMapLayer(mode) {
+            activeLayerMode = mode;
+            updateMapLayerVisibility();
+            showToast(`GIS mapping view toggled to ${mode}.`);
+        }
+
+        function renderTriageFeeds() {
+            // Operator Panel Populator
+            const opFeedContainer = document.getElementById('log-feed-container');
+            // Citizen Panel Populator
+            const citFeedContainer = document.getElementById('citizen-submissions-list');
+
+            if (opFeedContainer) opFeedContainer.innerHTML = '';
+            if (citFeedContainer) citFeedContainer.innerHTML = '';
+
+            const statusColors = {
+                low: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+                medium: 'bg-amber-50 text-amber-600 border-amber-100',
+                high: 'bg-orange-50 text-orange-600 border-orange-100',
+                critical: 'bg-red-50 text-red-600 border-red-100'
+            };
+
+            const sorted = [...databaseIncidents].sort((a,b) => b.confidence_score - a.confidence_score);
+            let citizenOwnCount = 0;
+
+            sorted.forEach(inc => {
+                const badgeStyle = statusColors[inc.severity] || 'bg-gray-50 text-gray-600';
+                
+                // Card Template Structure
+                const cardHTML = `
+                    <div class="w-12 h-12 bg-gray-50 rounded-xl overflow-hidden shrink-0 border border-gray-100 relative">
+                        <img src="${inc.image_path}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-extrabold text-brandCharcoal truncate uppercase tracking-wide">${inc.incident_type.replace('_',' ')}</span>
+                            <span class="text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded-md border ${badgeStyle}">${inc.severity}</span>
+                        </div>
+                        <p class="text-[9px] text-gray-400 font-bold mt-0.5 truncate"><i class="fa-solid fa-building-shield text-brandOrange mr-1"></i> ${inc.department}</p>
+                        <p class="text-[10px] text-gray-500 font-semibold mt-1 leading-tight line-clamp-2">${inc.description_user}</p>
+                        <div class="flex items-center justify-between mt-2 text-[9px] font-extrabold text-gray-400">
+                            <span><i class="fa-solid fa-square-poll-horizontal text-brandOrange mr-0.5"></i> ${inc.confirmations} votes</span>
+                            <span class="text-brandCharcoal font-mono bg-slate-100 px-1 py-0.5 rounded">Conf: ${(inc.confidence_score*100).toFixed(0)}%</span>
+                        </div>
+                    </div>
+                `;
+
+                // Render into admin panel
+                if (opFeedContainer) {
+                    const card = document.createElement('div');
+                    card.className = "bg-white p-3 rounded-2xl border border-gray-150 flex items-start gap-3 hover:border-brandOrange cursor-pointer transition-all premium-shadow";
+                    card.onclick = () => inspectIncident(inc.id);
+                    card.innerHTML = cardHTML;
+                    opFeedContainer.appendChild(card);
+                }
+
+                // Render into citizen reports list if match
+                if (citFeedContainer && inc.filed_by === currentUser.id) {
+                    citizenOwnCount++;
+                    const card = document.createElement('div');
+                    card.className = "bg-white p-3 rounded-2xl border border-gray-150 flex items-start gap-3 hover:border-brandOrange cursor-pointer transition-all premium-shadow";
+                    card.onclick = () => inspectIncident(inc.id);
+                    card.innerHTML = cardHTML;
+                    citFeedContainer.appendChild(card);
+                }
+            });
+
+            // Update log indicators
+            if (document.getElementById('log-count')) {
+                document.getElementById('log-count').textContent = `${databaseIncidents.length} active items`;
+            }
+            if (document.getElementById('cit-report-count')) {
+                document.getElementById('cit-report-count').textContent = `${citizenOwnCount} filed by you`;
+            }
+        }
+
+        function inspectIncident(id) {
+            const inc = databaseIncidents.find(x => x.id === id);
+            if (!inc) return;
+
+            document.getElementById('drawer-type').textContent = inc.incident_type.replace('_',' ');
+            document.getElementById('drawer-severity').textContent = inc.severity;
+            document.getElementById('drawer-id').textContent = inc.id;
+
+            const severityBadgeColors = {
+                low: 'bg-emerald-50 text-emerald-600 border border-emerald-200',
+                medium: 'bg-amber-50 text-amber-600 border border-amber-200',
+                high: 'bg-orange-50 text-orange-600 border border-orange-200',
+                critical: 'bg-red-50 text-red-600 border border-red-200'
+            };
+            document.getElementById('drawer-severity').className = `text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase ${severityBadgeColors[inc.severity]}`;
+
+            document.getElementById('drawer-location').innerHTML = `<i class="fa-solid fa-location-crosshairs mr-1 text-brandOrange"></i> Coordinate Vector: [${inc.lat.toFixed(5)}, ${inc.lon.toFixed(5)}]`;
+            document.getElementById('drawer-image').src = inc.image_path;
+            document.getElementById('drawer-ai-reasoning').textContent = inc.ai_reasoning;
+            document.getElementById('drawer-routing-target').textContent = inc.department;
+            document.getElementById('drawer-confirmations').textContent = inc.confirmations;
+
+            // Generate physical tel: triggers dynamic endpoints
+            const phoneAction = document.getElementById('drawer-phone-action');
+            if (inc.incident_type === 'accident') {
+                phoneAction.href = "tel:100"; // Trigger standard emergency traffic police line
+                phoneAction.innerHTML = `<i class="fa-solid fa-phone animate-bounce"></i> Call Highway Traffic Police (Tel: 100)`;
+                phoneAction.classList.remove('hidden');
+            } else if (inc.incident_type === 'flooding') {
+                phoneAction.href = "tel:101"; // Drainage Emergency call link
+                phoneAction.innerHTML = `<i class="fa-solid fa-phone animate-bounce"></i> Call Drainage Control Helpdesk (Tel: 101)`;
+                phoneAction.classList.remove('hidden');
+            } else {
+                phoneAction.href = "tel:+15550199";
+                phoneAction.innerHTML = `<i class="fa-solid fa-phone"></i> Call Municipal Support Desk`;
+                phoneAction.classList.remove('hidden');
+            }
+
+            // Calculate exact transparent math terms for UI (§4.3)
+            const simulatedGeminiConf = inc.gemini_core_confidence || 0.82;
+            const simulatedGpsAccuracy = inc.gps_accuracy_m || 15.0;
+            const simulatedReporterTrust = inc.reporter_trust || 75;
+
+            const scoreObj = computeConfidenceScore(
+                simulatedGeminiConf, 
+                inc.confirmations, 
+                simulatedGpsAccuracy, 
+                simulatedReporterTrust
+            );
+
+            // Dynamically output transparent XAI weights to layout
+            document.getElementById('drawer-confidence-total').textContent = `e = ${scoreObj.total}`;
+            document.getElementById('formula-ml-label').textContent = scoreObj.ml;
+            document.getElementById('formula-votes-label').textContent = scoreObj.votes;
+            document.getElementById('formula-gps-label').textContent = scoreObj.gps;
+            document.getElementById('formula-trust-label').textContent = scoreObj.trust;
+
+            const pct = Math.min(100, (inc.confirmations / 4) * 100);
+            document.getElementById('drawer-consensus-bar').style.width = `${pct}%`;
+
+            document.getElementById('incident-detail-drawer').classList.remove('hidden');
+            if (mapInstance) {
+                mapInstance.setView([inc.lat, inc.lon], 15);
+            }
+        }
+
+        function closeDetailDrawer() {
+            document.getElementById('incident-detail-drawer').classList.add('hidden');
+        }
+
+        function voteOnDrawerIncident(voteType) {
+            const idToSearch = document.getElementById('drawer-id').textContent;
+            const match = databaseIncidents.find(x => x.id === idToSearch);
+
+            if (match) {
+                if (voteType === 'confirm') {
+                    match.confirmations++;
+                    showToast("Consensus verification registered.");
+                } else {
+                    match.confirmations = Math.max(0, match.confirmations - 1);
+                    showToast("Negative review registered.");
+                }
+                syncDataAndUI();
+                inspectIncident(match.id);
+            }
+        }
+
+        function calculateSafeRoutes() {
+            if (!mapInstance) return;
+
+            clearRoutes();
+
+            let originRaw, destinationRaw;
+
+            if (currentUser.role === 'citizen') {
+                originRaw = document.getElementById('cit-route-start').value.split(',').map(Number);
+                destinationRaw = document.getElementById('cit-route-end').value.split(',').map(Number);
+            } else {
+                originRaw = document.getElementById('route-start').value.split(',').map(Number);
+                destinationRaw = document.getElementById('route-end').value.split(',').map(Number);
+            }
+
+            if (originRaw.length !== 2 || destinationRaw.length !== 2 || isNaN(originRaw[0]) || isNaN(destinationRaw[0])) {
+                return showToast("Provide correctly structured starting/ending coordinates.");
+            }
+
+            // Create customized Leaflet divicon waypoints
+            const startMarker = L.marker(originRaw, {
+                icon: L.divIcon({
+                    className: '',
+                    html: `<div class="w-8 h-8 bg-brandCharcoal text-white rounded-full flex items-center justify-center font-bold border-2 border-white text-xs shadow-md">A</div>`
+                })
+            }).addTo(mapInstance);
+
+            const endMarker = L.marker(destinationRaw, {
+                icon: L.divIcon({
+                    className: '',
+                    html: `<div class="w-8 h-8 bg-brandOrange text-white rounded-full flex items-center justify-center font-bold border-2 border-white text-xs shadow-md">B</div>`
+                })
+            }).addTo(mapInstance);
+
+            routeMarkers.push(startMarker, endMarker);
+
+            // Detour path polyline coordinates (Around collision INC-104 hotspot)
+            const routeCoordinates = [
+                originRaw,
+                [28.6110, 77.2000],
+                [28.6200, 77.2100],
+                [28.6290, 77.2150],
+                destinationRaw
+            ];
+
+            routeLine = L.polyline(routeCoordinates, {
+                color: '#ff7a22',
+                weight: 6,
+                opacity: 0.90,
+                dashArray: '10, 6',
+                lineJoin: 'round'
+            }).addTo(mapInstance);
+
+            mapInstance.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
+
+            // Display comparisons metrics list
+            if (currentUser.role === 'citizen') {
+                document.getElementById('cit-routing-comparison').classList.remove('hidden');
+            } else {
+                document.getElementById('routing-comparison-results').classList.remove('hidden');
+            }
+
+            showToast("Risk detours calculated. Avoidance tracks mapped.");
+        }
+
+        function clearRoutes() {
+            routeMarkers.forEach(m => mapInstance.removeLayer(m));
+            if (routeLine) mapInstance.removeLayer(routeLine);
+            routeMarkers = [];
+            routeLine = null;
+            
+            document.getElementById('cit-routing-comparison').classList.add('hidden');
+            document.getElementById('routing-comparison-results').classList.add('hidden');
+        }
+
+        function initResolutionTimelineChart() {
+            const canvas = document.getElementById('resolutionChart');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Roads', 'Drainage', 'Traffic Police', 'Municipal'],
+                    datasets: [{
+                        label: 'Resolution Timelines (Hours)',
+                        data: [24, 48, 4, 36],
+                        backgroundColor: '#ff7a22',
+                        hoverBackgroundColor: '#1d1f23',
+                        borderRadius: 8,
+                        barThickness: 24
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#f1f5f9'
+                            },
+                            ticks: {
+                                color: '#94a3b8',
+                                font: {
+                                    family: 'Plus Jakarta Sans',
+                                    size: 9,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#1d1f23',
+                                font: {
+                                    family: 'Plus Jakarta Sans',
+                                    size: 10,
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // HTML Canvas watermarked Instagram Share Card generator (§1)
+        function generateInstagramCard() {
+            const activeId = document.getElementById('drawer-id').textContent;
+            const inc = databaseIncidents.find(x => x.id === activeId);
+            if (!inc) return;
+
+            const canvas = document.getElementById('instagram-canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Draw premium background color
+            ctx.fillStyle = "#1d1f23";
+            ctx.fillRect(0, 0, 400, 400);
+
+            // Draw branding header bar
+            ctx.fillStyle = "#ff7a22";
+            ctx.fillRect(0, 0, 400, 50);
+
+            // Text on header
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "bold 14px 'Plus Jakarta Sans', sans-serif";
+            ctx.fillText("RoadPulse AI — CIVIC EVIDENCE DISPATCH", 20, 32);
+
+            // Draw a high-tech vector wireframe layout instead of an external placehold.co image (to guarantee NO CORS errors on download)
+            ctx.strokeStyle = "rgba(255, 122, 34, 0.3)";
+            ctx.lineWidth = 1;
+            for(let i = 0; i < 400; i += 20) {
+                ctx.beginPath();
+                ctx.moveTo(i, 50);
+                ctx.lineTo(i, 200);
+                ctx.stroke();
+            }
+            ctx.fillStyle = "rgba(255, 122, 34, 0.05)";
+            ctx.fillRect(0, 50, 400, 150);
+
+            // Stylized Hazard Sign in vectors
+            ctx.strokeStyle = "#ff7a22";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(200, 80);
+            ctx.lineTo(240, 150);
+            ctx.lineTo(160, 150);
+            ctx.closePath();
+            ctx.stroke();
+
+            ctx.fillStyle = "#ff7a22";
+            ctx.font = "bold 20px sans-serif";
+            ctx.fillText("!", 197, 140);
+
+            // Incident details
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "bold 20px sans-serif";
+            ctx.fillText(inc.incident_type.toUpperCase().replace('_',' '), 20, 240);
+
+            ctx.fillStyle = "#a1a1aa";
+            ctx.font = "12px sans-serif";
+            ctx.fillText(`ID: ${inc.id} | Severity: ${inc.severity.toUpperCase()}`, 20, 265);
+
+            // Coordinates details
+            ctx.fillStyle = "#ff7a22";
+            ctx.font = "bold 12px monospace";
+            ctx.fillText(`GPS COORDINATES: [${inc.lat.toFixed(4)}, ${inc.lon.toFixed(4)}]`, 20, 290);
+
+            // AI summary note
+            ctx.fillStyle = "#f4f5f8";
+            ctx.font = "11px sans-serif";
+            const summaryText = inc.ai_summary || "Verification anomaly parsed in real-time.";
+            wrapText(ctx, `Complaint: "${summaryText}"`, 20, 320, 360, 16);
+
+            // Anti-Tamper Security Watermark (§1)
+            ctx.save();
+            ctx.translate(200, 310);
+            ctx.rotate(-Math.PI / 12);
+            ctx.fillStyle = "rgba(255, 122, 34, 0.15)";
+            ctx.font = "900 24px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("VERIFIED EVIDENCE", 0, 0);
+            ctx.restore();
+
+            // Bottom metadata info
+            ctx.fillStyle = "#71717a";
+            ctx.font = "9px sans-serif";
+            ctx.fillText("Automated export under RoadPulse civic reporting framework v4.5", 20, 380);
+
+            // Show interactive modal popover
+            document.getElementById('share-card-modal').classList.remove('hidden');
+        }
+
+        function closeShareModal() {
+            document.getElementById('share-card-modal').classList.add('hidden');
+        }
+
+        function downloadShareCard() {
+            const canvas = document.getElementById('instagram-canvas');
+            const dataUrl = canvas.toDataURL("image/png");
+            
+            // Create simulated download anchor element
+            const link = document.createElement('a');
+            link.download = `RoadPulse_Complaint_${document.getElementById('drawer-id').textContent}.png`;
+            link.href = dataUrl;
+            link.click();
+            showToast("Verified Instagram Evidence card exported to folder.");
+            closeShareModal();
+        }
+
+        // Helper to handle multiline text rendering inside share card canvas
+        function wrapText(context, text, x, y, maxWidth, lineHeight) {
+            const words = text.split(' ');
+            let line = '';
+
+            for (let n = 0; n < words.length; n++) {
+                let testLine = line + words[n] + ' ';
+                let metrics = context.measureText(testLine);
+                let testWidth = metrics.width;
+                if (testWidth > maxWidth && n > 0) {
+                    context.fillText(line, x, y);
+                    line = words[n] + ' ';
+                    y += lineHeight;
+                } else {
+                    line = testLine;
+                }
+            }
+            context.fillText(line, x, y);
+        }
+    </script>
+</body>
+</html>
