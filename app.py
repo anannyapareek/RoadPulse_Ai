@@ -449,6 +449,13 @@ def admin():
     return render_template('admin.html')
 
 
+@app.route('/uploads/<filename>', methods=['GET'])
+def serve_upload(filename):
+    """Serve uploaded images from the uploads folder."""
+    from flask import send_from_directory
+    return send_from_directory(os.path.join(os.getcwd(), 'uploads'), filename)
+
+
 @app.route('/api/analytics', methods=['GET'])
 def get_analytics():
     """Return dashboard analytics metrics."""

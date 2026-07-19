@@ -6,12 +6,29 @@
         async function fetchLiveIncidents() {
             const response = await API.getIncidents();
             if(response.success) {
-                // Ensure field mappings match if backend uses different keys
-                databaseIncidents = response.incidents.map(inc => ({
-                    ...inc,
-                    lat: inc.latitude,
-                    lon: inc.longitude
-                }));
+                // Ensure field mappings match database schema columns to frontend model
+                databaseIncidents = response.incidents.map(inc => {
+                    let reasoning = 'No reasoning available.';
+                    if (inc.raw_gemini_response) {
+                        try {
+                            const parsed = JSON.parse(inc.raw_gemini_response);
+                            reasoning = parsed.reason || inc.raw_gemini_response;
+                        } catch (e) {
+                            reasoning = inc.raw_gemini_response;
+                        }
+                    }
+                    return {
+                        ...inc,
+                        lat: inc.latitude,
+                        lon: inc.longitude,
+                        severity: inc.severity_level,
+                        image_path: inc.image_filename ? '/uploads/' + inc.image_filename : '/static/img/placeholder.png',
+                        department: inc.routing_rule || 'Municipal Road Department',
+                        description_user: inc.notes || 'No description provided.',
+                        ai_reasoning: reasoning,
+                        confirmations: inc.is_duplicate ? 1 : 0
+                    };
+                });
                 if (typeof syncDataAndUI === "function") syncDataAndUI();
             }
         }
@@ -782,7 +799,7 @@
         }
 
         function inspectIncident(id) {
-            const inc = databaseIncidents.find(x => x.id === id);
+            const inc = databaseIncidents.find(x => Number(x.id) === Number(id));
             if (!inc) return;
 
             document.getElementById('drawer-type').textContent = inc.incident_type.replace('_',' ');
