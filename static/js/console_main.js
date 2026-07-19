@@ -419,154 +419,101 @@
         }
 
         // Form processing workflow
-        function submitForm(event) {
+        async function submitForm(event) {
             event.preventDefault();
 
-            let lat, lon, note;
+            let lat, lon, note, fileInput;
             const isCitizen = (currentUser.role === 'citizen');
 
             if (isCitizen) {
                 lat = parseFloat(document.getElementById('cit-form-lat').value);
                 lon = parseFloat(document.getElementById('cit-form-lon').value);
                 note = document.getElementById('cit-form-note').value;
+                fileInput = document.getElementById('citizen-photo');
             } else {
                 lat = parseFloat(document.getElementById('form-lat').value);
                 lon = parseFloat(document.getElementById('form-lon').value);
                 note = document.getElementById('form-note').value;
+                fileInput = document.getElementById('photo-input');
             }
 
             if (isNaN(lat) || isNaN(lon)) {
                 return showToast("Provide correctly structured geographic coordinates.");
             }
 
-            // Anomaly classification keywords map (§4.4)
-            let detectedType = "pothole";
-            let severity = "medium";
-            let dept = "Municipal Road Department";
-
-            const lowNote = note.toLowerCase();
-            if (lowNote.includes('flood') || lowNote.includes('water') || lowNote.includes('drain')) {
-                detectedType = "flooding";
-                severity = "critical";
-                dept = "Drainage Department";
-            } else if (lowNote.includes('signal') || lowNote.includes('traffic light') || lowNote.includes('power')) {
-                detectedType = "broken_signal";
-                severity = "medium";
-                dept = "Traffic Department";
-            } else if (lowNote.includes('accident') || lowNote.includes('crash') || lowNote.includes('collision')) {
-                detectedType = "accident";
-                severity = "critical";
-                dept = "Traffic Police";
+            if (!fileInput.files || fileInput.files.length === 0) {
+                return showToast("Please upload an evidence snapshot.");
             }
 
-            // DUPLICATE SPATIAL DETECTOR CHECK (Exact §4.2 Report Limit Radius = 50 meters)
-            let duplicateFound = null;
-            for (let i = 0; i < databaseIncidents.length; i++) {
-                const existing = databaseIncidents[i];
-                if (existing.incident_type === detectedType) {
-                    const dist = haversineDistanceMeters(lat, lon, existing.lat, existing.lon);
-                    if (dist <= 50) {
-                        duplicateFound = existing;
-                        break;
-                    }
-                }
-            }
+            const imageFile = fileInput.files[0];
 
             // UI submission button anim state
             const targetBtnId = isCitizen ? 'cit-btn-submit' : 'btn-submit';
             const targetTxtId = isCitizen ? 'cit-btn-submit-text' : 'btn-submit-text';
             const submitBtn = document.getElementById(targetBtnId);
             const submitTxt = document.getElementById(targetTxtId);
+            const originalBtnHtml = submitTxt.innerHTML;
 
             submitBtn.disabled = true;
             submitTxt.innerHTML = "Processing Gemini Vision Pipeline <i class='fa-solid fa-spinner animate-spin ml-1.5'></i>";
 
-            setTimeout(() => {
-                submitBtn.disabled = false;
-                submitTxt.textContent = isCitizen ? "Submit Urgent Report" : "Run AI Processing Pipeline";
+            try {
+                const formData = new FormData();
+                formData.append('image', imageFile);
+                formData.append('lat', lat);
+                formData.append('lon', lon);
+                formData.append('note', note);
+                formData.append('gps_accuracy', '15.0');
+                formData.append('device_id', currentUser.id || 'anonymous');
 
-                if (duplicateFound) {
-                    duplicateFound.confirmations++;
-                    
-                    // Recalculate transparent score with new confirmation boost
-                    const scoreObj = computeConfidenceScore(
-                        duplicateFound.gemini_core_confidence || 0.85, 
-                        duplicateFound.confirmations, 
-                        duplicateFound.gps_accuracy_m || 15.0, 
-                        duplicateFound.reporter_trust || 75
-                    );
-                    duplicateFound.confidence_score = scoreObj.total;
-                    
-                    showToast("Spatial Overlap (Within 50m limit): Dynamic data cluster merged.");
-                    syncDataAndUI();
-                    inspectIncident(duplicateFound.id);
-                    if (isCitizen) {
-                        switchTab('citizen-my-reports');
-                    } else {
-                        switchTab('dashboard');
-                    }
+                const res = await API.submitIncidentReport(formData);
+
+                if (!res.success) {
+                    showToast("Error: " + (res.error || "Submission failed"));
                     return;
                 }
 
-                // Add to database
-                const newId = "INC-" + (100 + databaseIncidents.length + 1);
-                
-                // Simulate standard Gemini Vision confidence core
-                const simulatedGeminiConf = 0.82; 
-                const simulatedGpsAccuracy = 15.0; // Simulated mobile cell accuracy in meters
-                
-                // Calculate formula score
-                const scoreObj = computeConfidenceScore(
-                    simulatedGeminiConf, 
-                    1, 
-                    simulatedGpsAccuracy, 
-                    currentUser.trust_score
-                );
-
-                const newIncident = {
-                    id: newId,
-                    incident_type: detectedType,
-                    severity: severity,
-                    confidence_score: scoreObj.total,
-                    gemini_core_confidence: simulatedGeminiConf,
-                    status: "verified",
-                    lat: lat,
-                    lon: lon,
-                    description_user: note || "Field report submitted with telemetry parameters.",
-                    ai_reasoning: `Visual checks align with normal patterns for ${detectedType.replace('_', ' ')}. Automated priority dispatch activated.`,
-                    ai_summary: `Newly registered ${detectedType.replace('_', ' ')} verified near coordinate sector.`,
-                    department: dept,
-                    image_path: `https://placehold.co/600x400/ffe4e6/991b1b?text=${detectedType.toUpperCase()}`,
-                    confirmations: 1,
-                    filed_by: isCitizen ? currentUser.id : 'system',
-                    gps_accuracy_m: simulatedGpsAccuracy,
-                    reporter_trust: currentUser.trust_score
-                };
-
-                databaseIncidents.push(newIncident);
                 showToast("Telemetry successfully classified by Gemini Vision AI.");
-                
-                syncDataAndUI();
-                inspectIncident(newId);
+
+                // Re-fetch database items to include the new one (handles duplication / classifications automatically on backend)
+                await fetchLiveIncidents();
 
                 // Increment citizen trust on successful verification report submission
                 if (isCitizen) {
                     currentUser.trust_score = Math.min(100, currentUser.trust_score + 5);
-                    document.getElementById('user-trust-badge').textContent = currentUser.trust_score;
+                    const trustBadge = document.getElementById('user-trust-badge');
+                    if (trustBadge) trustBadge.textContent = currentUser.trust_score;
                 }
 
+                // Reset form fields
                 if (isCitizen) {
+                    document.getElementById('cit-form-lat').value = '';
+                    document.getElementById('cit-form-lon').value = '';
+                    document.getElementById('cit-form-note').value = '';
+                    document.getElementById('cit-file-label').textContent = 'Upload your phone snapshot';
                     switchTab('citizen-my-reports');
                 } else {
+                    document.getElementById('form-lat').value = '';
+                    document.getElementById('form-lon').value = '';
+                    document.getElementById('form-note').value = '';
+                    document.getElementById('file-label-name').textContent = 'Upload new evidence snapshot';
                     switchTab('dashboard');
                 }
 
-                // Twilio escalation trigger check
-                if (severity === "critical" && scoreObj.total >= 0.55) {
-                    triggerSimulatedTwilioCall(newIncident);
+                fileInput.value = '';
+
+                // Inspect the newly created or matched incident
+                if (res.incident_id) {
+                    inspectIncident(res.incident_id);
                 }
 
-            }, 1800);
+            } catch (err) {
+                console.error(err);
+                showToast("Failed to process report pipeline.");
+            } finally {
+                submitBtn.disabled = false;
+                submitTxt.innerHTML = originalBtnHtml;
+            }
         }
 
         // Simulated emergency telephone dial action

@@ -287,7 +287,7 @@ def api_incidents():
         include_dups = request.args.get('include_duplicates', 'false', type=str).lower() == 'true'
         
         # Build query
-        base_query = 'SELECT * FROM incidents WHERE 1=1'
+        base_query = 'SELECT *, (SELECT COUNT(*) FROM incidents d WHERE d.duplicate_of_id = incidents.id) + 1 as confirmations FROM incidents WHERE 1=1'
         count_query = 'SELECT COUNT(*) as total FROM incidents WHERE 1=1'
         params = []
         
